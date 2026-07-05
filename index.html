@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OT Cyber Range by Xploit Academy — Industrial Cybersecurity Awareness Training</title>
+<meta name="description" content="OT Cyber Range by Xploit Academy — interactive, scenario-based OT/ICS cybersecurity awareness training. Fully offline-capable.">
+<style>
+/* ============================================================
+   OT CYBER RANGE — HMI-inspired design system
+   Palette: ink #0A0B0D | panel #141619 | line #26292E
+   signal red #EF0F0D | white #F5F6F7 | amber #FFB020 | green #2ECC71
+   ============================================================ */
+:root{
+  --ink:#0A0B0D;
+  --panel:#141619;
+  --panel-2:#1B1E22;
+  --line:#26292E;
+  --line-strong:#3A3E45;
+  --text:#F5F6F7;
+  --text-dim:#9AA0A8;
+  --red:#EF0F0D;
+  --red-dim:#8C1210;
+  --amber:#FFB020;
+  --green:#2ECC71;
+  --blue:#3B9DD9;
+  --radius:3px;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --shadow:0 8px 28px rgba(0,0,0,.45);
+}
+[data-theme="light"]{
+  --ink:#EEF0F2;
+  --panel:#FFFFFF;
+  --panel-2:#F5F6F8;
+  --line:#D6D9DE;
+  --line-strong:#B7BBC2;
+  --text:#14161A;
+  --text-dim:#5A6069;
+  --shadow:0 8px 24px rgba(20,22,26,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.55;
+  min-height:100vh;
+}
+body::before{ /* faint grid, control-room drawing sheet */
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:48px 48px;opacity:.14;
+}
+#app{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 20px 80px}
+a{color:var(--text)}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* ---------- header / telemetry strip ---------- */
+header.hud{
+  position:sticky;top:0;z-index:50;
+  background:color-mix(in srgb,var(--ink) 88%,transparent);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  margin:0 -20px;padding:0 20px;
+}
+.hud-inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:12px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text)}
+.brand-logo-link{display:flex;align-items:center;border-radius:50%;transition:box-shadow .15s ease,transform .12s ease}
+.brand-logo-link:hover{box-shadow:0 0 0 1px var(--red),0 0 14px rgba(239,15,13,.45);transform:translateY(-1px)}
+.brand-name-btn{display:flex;align-items:center;background:none;border:0;color:var(--text);padding:0;cursor:pointer}
+.brand-mark{width:38px;height:38px;flex:none}
+img.brand-mark{border-radius:50%;display:block}
+.brand-name{font-weight:800;letter-spacing:.14em;font-size:15px;text-transform:uppercase}
+.brand-name small{display:block;font-family:var(--mono);font-size:9.5px;font-weight:400;letter-spacing:.22em;color:var(--red)}
+.telemetry{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.tele{
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:5px 9px;display:flex;align-items:center;gap:7px;color:var(--text-dim);
+  background:var(--panel);
+}
+.tele b{color:var(--text);font-weight:600}
+.led{width:8px;height:8px;border-radius:50%;flex:none;background:var(--green);box-shadow:0 0 6px var(--green)}
+.led.red{background:var(--red);box-shadow:0 0 6px var(--red)}
+.led.amber{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.icon-btn{
+  border:1px solid var(--line);background:var(--panel);color:var(--text);
+  border-radius:var(--radius);padding:5px 10px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+}
+.icon-btn:hover{border-color:var(--line-strong)}
+
+/* ---------- generic panel ---------- */
+.panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);position:relative;
+}
+.panel-head{
+  display:flex;align-items:center;gap:10px;padding:10px 16px;
+  border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);
+}
+.panel-body{padding:20px}
+.tag{
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  border:1px solid var(--line);border-radius:var(--radius);padding:2px 7px;color:var(--text-dim);
+}
+.tag.red{color:var(--red);border-color:var(--red-dim)}
+.tag.green{color:var(--green);border-color:var(--green)}
+.tag.amber{color:var(--amber);border-color:var(--amber)}
+
+/* ---------- hero ---------- */
+.hero{margin:34px 0 26px;display:grid;grid-template-columns:1.35fr .9fr;gap:22px;align-items:stretch}
+.hero h1{
+  font-size:clamp(30px,4.6vw,46px);font-weight:800;line-height:1.06;letter-spacing:-.015em;
+  text-transform:uppercase;
+}
+.hero h1 .accent{color:var(--red)}
+.hero p.lede{color:var(--text-dim);margin:14px 0 20px;max-width:52ch}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--red)}
+.hero-visual{min-height:220px;display:flex;align-items:center;justify-content:center;padding:14px}
+.hero-visual svg{width:100%;height:auto;max-height:280px}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:9px;border-radius:var(--radius);
+  padding:11px 20px;font-weight:700;font-size:14px;letter-spacing:.04em;border:1px solid transparent;
+  transition:transform .12s ease,box-shadow .12s ease,background .12s ease;
+  text-transform:uppercase;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover{box-shadow:0 0 0 1px var(--red),0 6px 20px rgba(239,15,13,.35)}
+.btn-ghost{background:transparent;color:var(--text);border-color:var(--line-strong)}
+.btn-ghost:hover{border-color:var(--text-dim)}
+.btn-sm{padding:7px 13px;font-size:12px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+/* ---------- stats row ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 26px}
+.stat{padding:14px 16px}
+.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim)}
+.stat .v{font-size:26px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:12px;color:var(--text-dim);font-weight:500}
+.xpbar{height:6px;background:var(--panel-2);border:1px solid var(--line);border-radius:99px;margin-top:9px;overflow:hidden}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--red-dim),var(--red));transition:width .5s ease}
+
+/* ---------- module grid ---------- */
+.toolbar{display:flex;gap:10px;align-items:center;margin:0 0 14px;flex-wrap:wrap}
+.toolbar input[type=search]{
+  flex:1;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--text);padding:9px 12px;font-family:var(--mono);font-size:13px;
+}
+.toolbar input[type=search]::placeholder{color:var(--text-dim)}
+.chip{
+  border:1px solid var(--line);background:var(--panel);color:var(--text-dim);
+  border-radius:99px;padding:6px 13px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+}
+.chip[aria-pressed=true]{color:#fff;background:var(--red);border-color:var(--red)}
+.units{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.unit{
+  text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--text);padding:0;overflow:hidden;display:flex;flex-direction:column;
+  transition:border-color .15s ease,transform .15s ease;
+}
+.unit:hover{border-color:var(--line-strong);transform:translateY(-2px)}
+.unit-head{
+  display:flex;align-items:center;gap:9px;padding:9px 14px;border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--text-dim);text-transform:uppercase;
+}
+.unit-body{padding:15px 16px 16px;display:flex;flex-direction:column;gap:9px;flex:1}
+.unit h3{font-size:17px;font-weight:700;line-height:1.25}
+.unit p{font-size:13.5px;color:var(--text-dim)}
+.unit-art{height:110px;display:flex;align-items:center;justify-content:center;background:var(--panel-2);border-bottom:1px solid var(--line)}
+.unit-art svg{height:82px;width:auto}
+.unit-foot{display:flex;align-items:center;gap:10px;margin-top:auto;padding-top:8px}
+.unit-foot .tag{margin-left:auto}
+.progress-mini{flex:1;height:5px;background:var(--panel-2);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.progress-mini i{display:block;height:100%;background:var(--red)}
+.unit.done .progress-mini i{background:var(--green)}
+
+/* ---------- player ---------- */
+.player{margin-top:26px}
+.player-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.player-head h2{font-size:20px;text-transform:uppercase;letter-spacing:.02em}
+.crumbs{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.1em}
+.scene-art{background:var(--panel-2);border-bottom:1px solid var(--line);display:flex;justify-content:center;padding:18px}
+.scene-art svg{max-height:190px;width:auto;max-width:100%}
+.node-title{font-size:22px;font-weight:800;margin-bottom:10px;text-transform:uppercase;letter-spacing:.01em}
+.node-text{color:var(--text);max-width:66ch;white-space:pre-line}
+.node-text.dim{color:var(--text-dim)}
+.dialog{
+  display:flex;gap:14px;align-items:flex-start;background:var(--panel-2);
+  border:1px solid var(--line);border-left:3px solid var(--red);border-radius:var(--radius);
+  padding:14px 16px;margin-top:6px;
+}
+.avatar{
+  width:44px;height:44px;flex:none;border-radius:50%;border:1px solid var(--line-strong);
+  display:flex;align-items:center;justify-content:center;background:var(--ink);
+  font-family:var(--mono);font-weight:700;font-size:14px;color:var(--red);
+}
+.dialog .who{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px}
+.options{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.opt{
+  text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--text);padding:13px 16px;font-size:14.5px;display:flex;gap:12px;align-items:flex-start;
+  transition:border-color .12s ease,background .12s ease;
+}
+.opt:hover{border-color:var(--red)}
+.opt .key{
+  font-family:var(--mono);font-size:11px;color:var(--red);border:1px solid var(--red-dim);
+  border-radius:var(--radius);padding:1px 7px;flex:none;margin-top:2px;
+}
+.feedback{border-radius:var(--radius);border:1px solid;padding:16px 18px;margin-top:6px}
+.feedback.good{border-color:var(--green);background:color-mix(in srgb,var(--green) 8%,var(--panel))}
+.feedback.risky{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 8%,var(--panel))}
+.feedback.bad{border-color:var(--red);background:color-mix(in srgb,var(--red) 8%,var(--panel))}
+.feedback .fb-head{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:9px}
+.feedback.good .fb-head{color:var(--green)}
+.feedback.risky .fb-head{color:var(--amber)}
+.feedback.bad .fb-head{color:var(--red)}
+.fb-xp{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+.bullets{margin:10px 0 0 0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.bullets li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px}
+.bullets li::before{content:"";width:7px;height:7px;border-radius:1px;background:var(--red);flex:none;margin-top:7px}
+.player-nav{display:flex;gap:10px;margin-top:22px;align-items:center}
+.stepper{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:auto;letter-spacing:.1em}
+
+/* ---------- quiz ---------- */
+.quiz-q{font-size:17px;font-weight:700;margin-bottom:14px}
+.quiz-opt{composes:opt}
+.quiz-opt.correct{border-color:var(--green);background:color-mix(in srgb,var(--green) 10%,var(--panel-2))}
+.quiz-opt.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 10%,var(--panel-2))}
+.explain{margin-top:14px;font-size:14px;color:var(--text-dim);border-left:2px solid var(--line-strong);padding-left:12px}
+
+/* ---------- summary / badges ---------- */
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.badge{
+  border:1px solid var(--line);border-radius:var(--radius);padding:14px;text-align:center;
+  background:var(--panel-2);display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.badge.locked{opacity:.38;filter:grayscale(1)}
+.badge .b-ico{width:46px;height:46px}
+.badge .b-name{font-weight:700;font-size:13px}
+.badge .b-desc{font-size:11.5px;color:var(--text-dim)}
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:100;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--panel);border:1px solid var(--red);border-radius:var(--radius);
+  padding:11px 16px;box-shadow:var(--shadow);font-family:var(--mono);font-size:12px;
+  display:flex;align-items:center;gap:9px;animation:toastIn .25s ease;
+}
+@keyframes toastIn{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+
+/* ---------- certificate ---------- */
+.cert{
+  background:var(--panel);border:1px solid var(--line-strong);padding:46px 40px;text-align:center;
+  position:relative;overflow:hidden;
+}
+.cert::before{content:"";position:absolute;inset:10px;border:1px solid var(--red-dim);pointer-events:none}
+.cert h2{font-size:30px;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
+.cert .cert-name{font-size:26px;font-weight:800;color:var(--red);margin:16px 0 4px}
+.cert .mono{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase}
+.cert-seal{width:96px;height:96px;margin:0 auto 10px}
+img.cert-seal{border-radius:50%}
+input.field{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);color:var(--text);
+  padding:10px 13px;font-size:14px;width:100%;max-width:340px;
+}
+label.flabel{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);display:block;margin-bottom:6px}
+
+/* ---------- exam gate ---------- */
+.gate{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:34px 20px}
+.gate svg{width:64px;height:64px}
+
+.section-title{
+  display:flex;align-items:center;gap:12px;margin:30px 0 14px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--text-dim);
+}
+.section-title::after{content:"";flex:1;height:1px;background:var(--line)}
+
+footer.site{margin-top:56px;border-top:1px solid var(--line);padding-top:18px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;color:var(--text-dim);font-family:var(--mono);font-size:11px;letter-spacing:.08em}
+footer.site .led{width:6px;height:6px}
+
+/* ---------- featured Xploit Academy courses ---------- */
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.feature-card{
+  position:relative;display:flex;flex-direction:column;gap:12px;
+  background:
+    radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--red) 12%,transparent) 0%,transparent 42%),
+    var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 20px 18px;color:var(--text);overflow:hidden;
+  box-shadow:var(--shadow);
+  transition:border-color .16s ease,transform .16s ease,box-shadow .16s ease;
+}
+.feature-card::before{ /* top hairline accent */
+  content:"";position:absolute;left:0;top:0;height:2px;width:100%;
+  background:linear-gradient(90deg,var(--red),transparent 70%);opacity:.9;
+}
+.feature-card:hover{
+  border-color:var(--red);transform:translateY(-3px);
+  box-shadow:0 0 0 1px var(--red-dim),0 14px 34px rgba(239,15,13,.16),var(--shadow);
+}
+.fc-top{display:flex;align-items:center;gap:10px}
+.fc-mark{width:40px;height:40px;flex:none;color:var(--red)}
+.fc-mark svg{width:40px;height:40px;display:block}
+.fc-kicker{
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--red);border:1px solid var(--red-dim);border-radius:99px;padding:3px 10px;
+}
+.fc-title{font-size:19px;font-weight:800;line-height:1.2;letter-spacing:-.01em;text-transform:uppercase}
+.fc-desc{font-size:13.5px;color:var(--text-dim);line-height:1.5}
+.fc-meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
+.fc-meta span{
+  font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--text-dim);
+  border:1px solid var(--line);border-radius:99px;padding:3px 9px;
+}
+.fc-cta{
+  margin-top:auto;display:inline-flex;align-items:center;gap:8px;
+  font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--text);
+}
+.fc-cta .arrow{color:var(--red);transition:transform .16s ease}
+.feature-card:hover .fc-cta .arrow{transform:translateX(4px)}
+.feature-note{
+  font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.04em;
+  margin:12px 0 2px;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .feature-grid{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  .stats{grid-template-columns:1fr 1fr}
+  .brand-name{font-size:13px}
+}
+
+/* ---------- print (certificate) ---------- */
+@media print{
+  body::before,header.hud,.no-print,.toast-wrap,footer.site{display:none !important}
+  body{background:#fff;color:#000}
+  #app{max-width:100%;padding:0}
+  .cert{border-color:#999;box-shadow:none;background:#fff;color:#000}
+  .cert .mono{color:#444}
+}
+</style>
+</head>
+<body>
+<div class="toast-wrap" id="toasts" aria-live="polite"></div>
+<header class="hud">
+  <div class="hud-inner">
+    <div class="brand">
+      <a class="brand-logo-link" href="https://www.xploitacademy.com" target="_blank" rel="noopener noreferrer" aria-label="Visit Xploit Academy — xploitacademy.com">
+        <img class="brand-mark" id="brandLogo" alt="Xploit Academy logo" width="38" height="38">
+      </a>
+      <button class="brand-name-btn" id="brandBtn" aria-label="Go to dashboard">
+        <span class="brand-name">OT Cyber Range<small>by Xploit Academy // ICS-SCADA</small></span>
+      </button>
+    </div>
+    <div class="telemetry" id="telemetry"></div>
+  </div>
+</header>
+<main id="app" tabindex="-1"></main>
+<script>
+/* ============================================================
+   DATA LAYER — JSON-driven scenario engine content.
+   To add a module: append an object to MODULES following the
+   same node schema. No other code changes required.
+   ============================================================ */
+
+const LOGO = "data:image/png;base64,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oQWwRxDLoVu3Cf0jBuikf1dR8OV6ufvuu+8M4+WCIBKzOfTQQ/8toeWqPNzqhqKTe028iFCKOrx+9d6beAZaw2Fct2PQi7wGk50zWIh/T6gZebctSPJoYYCXFPp5caE/aBYH+Gav51evpHeL6n6v2EZyww034MILL7xnkzdscnSpWCqGKoQjBd687VvorF//GkGavfCK1ufK2H//A+D7LSNKE83fnoQYnQZZ3nfEETjiiCPwzne+E+VyGY8++mjm+JPhUZEUwRabb4G37fQ2PPbYY6lB8vlzaP95p7e9DTvutBO2ffO22GabbTA4OIinn346Jx3X/v7o3AYGBrDXXntj++23x5vetA222mprvOUtb8GUKVPx5JNPxOPDOmEoruti3333Ra1WQ6VSSUaN2Wuz0447Yc7cOXj++ec7Xovod9tv/1+YN28DPPPM07GHZWZsv/32mL/BfDzzzDOvmreL5JJ/4ZbxRhKoAlwEaESgdg05770mbFZOAnDj683Dpb3cvfff+40ol2v5LWZm/voJJ2hkhHrW/DM69pFHHqmZWV9w4YWrlT9GudzUqVP5H//8J99333182mmn8f/+7//qpUuX6osuujjJP1aRI9rX6TvvvEszs95993dqI2zqTOphrAfRDz74IN9zz736nHPO4fPPP58ffuQRfe+99+r111/f5lKioyeKAJMtt9iSmVn/+c+X6PPPP1+fe+65+oILLuDPf+5zOu918t5rYGCAmVnfcccdsRhrJJw7e85sZma+7LLLukYr0e/22GMPZmbeeuutmch8t80331wrpfQ7d38ndzuPVwoo2UM43CgM8aJCP79Q6A8axQH+W2nge8DLk8B7LRgcMbP41Kc+1b9s2dJnmVn7vq8iJan58+d3WTRrDkgBwHfddZf+3ve+p5988knebLPNMguy442xC2XhgoX8j3/8I/03PW3aND06OspHH310Spmss+FEi3Offfblhx56iH/5y1/qa6+9tssCzYaG0aK///77+Yj3vU+nvpP+/e/P5rvvvjtn9JT77ub4W2yxBS9ZupTtxr5aIW4EgEydOpUfefRRXalU+CMf/SgDYM8z2pe/PussbjQafM7//d+k6UH0+x/+8If82GOPxdfxoYcf0t/85jdftdSCrMH1gPgut4/HigO8qDCgxor9+pFC/6JjBgaGIqFUvJ4fkZe75ZZbjrBeLmy1jJe7/IrLXzEvFy32XXfdlSuVCXYcly+/7DI+66yzeLLPjBZ6f/8Aj42P65122okBcKFQsKK24GnTp/P6689bZS4TLaQbb7yRf/CDH3BfX5/2fV+/YZNNOuzq7YgpAL7/gQf4v489lh3H4VLJSPwViyWuTEzw9tv/l85uHtS22Wy11VY8Njamd955Z9588815yy235M0335xLxWJXVDH67GnTpvGj//oXf/WrX+XnnntODw0NaSEEv/3tb9f/euxf+swzz9RXXHHFpEaT9owvvLBI//cxx+hPHnusfvTRR5nISNu/lHzwRUc79t9vyBIHxQF+zuZu1fIAX1HuO/p17906Gd3TzzzzV6O+68dGd/TRH3pFdrnoeFdecSV///vf1wB400035WeffVYPDAzobsYSLdSNN95Yj1cqeuONN8544dX1xtHr5s+fz8uXL+epU6dqAPoPf/iD/uUvf8mTbzQUL/oHHniAj/nEMfHro1LHPffcw++zni8bnlLm8zffbHOu1xv8z3/ezn/729/41ltu5b/dfDPPnTs39brOgMjQ8DCPjI7wvA024OuuvZZ/+tOfMAB+6KGH+MMf/jB/7vOf57/+9a+5+0dd78XbdtpJT0xU9AsvvKDf+IY3vuqh5FZC6tHCgF5S6OdFhf6wUhrge0v9fwcgFhg84xX3bq+KRS9cuBBEhDvvuOPTw8NDd/X19gnfD1gpRT/84Y9w7XXX4fnnnu/CRn8JibGlca27zjq81957YdELi+h/vvY1+L6PadOm4ZD3HIJfn/VrdOrRi4CSlStXQpBA/8AAiAiu40BpHb/eTAnyJz0HrTU++tGPck9PD3346KPjWQTvec978LnPf44b9QZ1bllKwBRmsJCSorJERLyePn0GRkZGJumNsaCNFKjVa7z//vtR3AicWlmdr3cKjGHAdV18+jOf4Ruuv56WLFnKhUKBzjrrLHz3u9/r0OPYfi5KKTiOg5v/9je64YYbMTY2zg8/8nCunemVKwFE6OCPZAkOgBrALoAKs7qb8FkrDLRGOZOvah0u/zj00EOV1loefPDBDzz19BPfBSClI1SoFAYHB/GLn/8i0kNcM1/KHufoj3wYTz31FNVrNay//jxsMG8err/+enzs4x+naCF08MYQQmLlypV066234MQTTmCtNbd8P55Vd+utt2GPPfaI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";
+
+const ART = {
+  usb: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="30" y="48" width="90" height="30" rx="4"/><rect x="120" y="54" width="34" height="18" fill="none"/><line x1="126" y1="59" x2="134" y2="59"/><line x1="126" y1="67" x2="134" y2="67"/><path d="M30 63H14" stroke="#EF0F0D"/><circle cx="10" cy="63" r="4" stroke="#EF0F0D"/><text x="48" y="68" font-family="monospace" font-size="11" fill="currentColor" stroke="none">NO NAME</text></svg>`,
+  remote: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="12" y="30" width="60" height="42" rx="3"/><line x1="24" y1="80" x2="60" y2="80"/><line x1="42" y1="72" x2="42" y2="80"/><rect x="128" y="34" width="58" height="52" rx="3"/><rect x="138" y="44" width="38" height="20"/><circle cx="100" cy="56" r="12" stroke="#EF0F0D"/><path d="M72 56h16M112 56h16" stroke-dasharray="4 4"/><path d="M96 56l3 3 6-6" stroke="#EF0F0D"/></svg>`,
+  hmi: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="40" y="18" width="120" height="72" rx="4"/><line x1="70" y1="98" x2="130" y2="98"/><line x1="100" y1="90" x2="100" y2="98"/><path d="M52 66l18-16 14 10 20-22 14 12" stroke="#EF0F0D"/><rect x="132" y="28" width="18" height="8"/><rect x="132" y="42" width="18" height="8"/><circle cx="58" cy="30" r="4" stroke="#EF0F0D"/></svg>`,
+  phish: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="34" y="30" width="100" height="62" rx="3"/><path d="M34 34l50 34 50-34"/><path d="M150 44c14 4 22 16 20 30-10-2-18-8-22-16" stroke="#EF0F0D"/><circle cx="166" cy="86" r="3" fill="#EF0F0D" stroke="none"/><path d="M150 44l-8-8" stroke="#EF0F0D"/></svg>`,
+  network: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="16" y="14" width="52" height="26" rx="3"/><rect x="132" y="14" width="52" height="26" rx="3"/><rect x="74" y="48" width="52" height="24" rx="3" stroke="#EF0F0D"/><rect x="16" y="82" width="52" height="26" rx="3"/><rect x="132" y="82" width="52" height="26" rx="3"/><path d="M42 40v8h58M158 40v8h-58M100 72v10M42 82v-6h58M158 82v-6h-58"/><text x="82" y="64" font-family="monospace" font-size="10" fill="#EF0F0D" stroke="none">DMZ FW</text></svg>`,
+  ransom: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="70" y="52" width="60" height="44" rx="4" stroke="#EF0F0D"/><path d="M82 52V38a18 18 0 0 1 36 0v14" stroke="#EF0F0D"/><circle cx="100" cy="72" r="6"/><line x1="100" y1="78" x2="100" y2="86"/><path d="M30 30h20M26 42h28M150 30h20M146 42h28" stroke-dasharray="3 4"/></svg>`,
+  shield: `<svg viewBox="0 0 80 80" fill="none" stroke-width="2.5" aria-hidden="true"><path d="M40 8l26 10v18c0 16-10 30-26 36C24 66 14 52 14 36V18z" stroke="#EF0F0D"/><path d="M28 40l8 8 16-18" stroke="#2ECC71"/></svg>`,
+  plant: `<svg viewBox="0 0 360 220" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <rect x="20" y="120" width="90" height="70" rx="2"/><rect x="40" y="90" width="14" height="30"/><rect x="70" y="76" width="14" height="44"/>
+    <path d="M77 60c0-8 12-8 12 0s12 8 12 0" stroke-dasharray="2 4"/>
+    <rect x="140" y="100" width="80" height="90" rx="2" stroke="#EF0F0D"/>
+    <rect x="152" y="116" width="24" height="16"/><rect x="184" y="116" width="24" height="16"/>
+    <rect x="152" y="144" width="56" height="8"/><rect x="152" y="158" width="56" height="8"/><rect x="152" y="172" width="56" height="8"/>
+    <text x="150" y="98" font-family="monospace" font-size="11" fill="#EF0F0D" stroke="none">CONTROL ROOM</text>
+    <rect x="250" y="130" width="90" height="60" rx="2"/><circle cx="272" cy="160" r="14"/><circle cx="272" cy="160" r="6" stroke="#EF0F0D"/>
+    <path d="M296 146h34M296 160h34M296 174h34"/>
+    <path d="M110 160h30M220 160h30" stroke="#EF0F0D" stroke-dasharray="5 4"/>
+    <line x1="10" y1="190" x2="350" y2="190"/>
+    <circle cx="180" cy="40" r="3" fill="#EF0F0D" stroke="none"/><path d="M180 46v14M160 60h40" />
+  </svg>`,
+  plc: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="30" y="20" width="56" height="80" rx="3"/><rect x="38" y="28" width="40" height="10"/><rect x="38" y="44" width="40" height="10" stroke="#EF0F0D"/><rect x="38" y="60" width="40" height="10"/><circle cx="44" cy="88" r="3" fill="#EF0F0D" stroke="none"/><circle cx="56" cy="88" r="3"/><path d="M110 34h60M110 62h60M110 90h60"/><path d="M124 26v16M124 26h14v16h-14M152 54v16h14" stroke="#EF0F0D"/><path d="M86 60h24" stroke-dasharray="4 4"/></svg>`,
+  passwd: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="28" y="26" width="104" height="66" rx="3"/><text x="40" y="52" font-family="monospace" font-size="13" fill="currentColor" stroke="none">login: admin</text><text x="40" y="72" font-family="monospace" font-size="13" fill="#EF0F0D" stroke="none">pass:  admin</text><circle cx="160" cy="52" r="14" stroke="#EF0F0D"/><rect x="152" y="62" width="16" height="22" rx="2" stroke="#EF0F0D"/><line x1="160" y1="70" x2="160" y2="78"/></svg>`,
+  tech: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="70" cy="34" r="12"/><path d="M50 96V72c0-10 8-18 20-18s20 8 20 18v24"/><path d="M58 62h24" stroke="#EF0F0D"/><rect x="112" y="66" width="34" height="24" rx="3" stroke="#EF0F0D"/><line x1="122" y1="66" x2="122" y2="60"/><line x1="136" y1="66" x2="136" y2="60"/><path d="M120 60h18"/><rect x="156" y="30" width="26" height="38" rx="3"/><circle cx="169" cy="42" r="6"/><line x1="162" y1="56" x2="176" y2="56"/><text x="158" y="26" font-family="monospace" font-size="9" fill="#EF0F0D" stroke="none">ID?</text></svg>`,
+  vendorx: `<svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="12" y="38" width="54" height="38" rx="3"/><line x1="22" y1="84" x2="56" y2="84"/><line x1="39" y1="76" x2="39" y2="84"/><rect x="134" y="30" width="54" height="56" rx="3"/><rect x="142" y="40" width="38" height="20"/><path d="M66 57h68" stroke-dasharray="5 4" stroke="#EF0F0D"/><path d="M92 42l16 30M108 42L92 72" stroke="#EF0F0D"/><text x="18" y="32" font-family="monospace" font-size="9" fill="#EF0F0D" stroke="none">03:00 VPN</text></svg>`,
+  badge_first: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><circle cx="24" cy="20" r="12" stroke="#EF0F0D"/><path d="M18 30l-4 12 10-6 10 6-4-12"/><path d="M19 20l4 4 7-8" stroke="#2ECC71"/></svg>`,
+  badge_all: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="14" height="14" rx="2"/><rect x="26" y="8" width="14" height="14" rx="2"/><rect x="8" y="26" width="14" height="14" rx="2"/><rect x="26" y="26" width="14" height="14" rx="2" stroke="#EF0F0D"/></svg>`,
+  badge_perfect: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M24 4l6 12 14 2-10 10 2 14-12-6-12 6 2-14L4 18l14-2z" stroke="#FFB020"/></svg>`,
+  badge_exam: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><rect x="10" y="6" width="28" height="36" rx="2"/><path d="M16 16h16M16 24h16M16 32h8"/><circle cx="34" cy="34" r="9" stroke="#EF0F0D"/><path d="M30 34l3 3 5-6" stroke="#2ECC71"/></svg>`,
+  badge_streak: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M24 6c2 8-8 12-6 20 1 5 5 8 6 8s5-3 6-8c2-8-8-12-6-20z" stroke="#EF0F0D"/><path d="M24 44c-8 0-14-6-14-14 0-5 3-9 5-11" /><path d="M24 44c8 0 14-6 14-14 0-5-3-9-5-11"/></svg>`,
+  badge_level: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 40h8V26H8zM20 40h8V16h-8zM32 40h8V8h-8z" stroke="#EF0F0D"/></svg>`
+};
+
+const CATEGORIES = ["Removable Media","Remote Access","Patch & Change","Phishing","Network Security","Incident Response","Control Integrity","Access Control","Physical Security"];
+
+const MODULES = [
+{
+  id:"usb", unit:"UNIT-01", cat:"Removable Media", minutes:8,
+  title:"The USB Stick in the Car Park",
+  desc:"A found USB device, a curious operator, and one decision that can reach the PLC network.",
+  art:"usb",
+  nodes:{
+    start:{type:"scene",title:"Shift start — Water Treatment Plant 3",art:"usb",
+      text:"06:40. You are the shift operator at a water treatment facility. Walking from the car park to the control building, you notice a USB stick lying near the staff entrance. It is unlabeled except for a small logo that looks like your company's.",next:"d1"},
+    d1:{type:"dialog",speaker:"Karim",role:"Maintenance Technician",
+      text:"Morning! Oh — someone dropped a USB. Might have the new pump maintenance schedules on it. Plug it into the engineering workstation and check who it belongs to?",next:"dec1"},
+    dec1:{type:"decision",prompt:"What do you do with the USB stick?",options:[
+      {label:"Plug it into the engineering workstation quickly — just to identify the owner.",quality:"bad",xp:10,
+       feedback:"The engineering workstation programs your PLCs. Attackers deliberately drop infected USB devices near industrial sites — a single autorun payload or malicious firmware can bridge directly into the control network. 'Just checking' is exactly how major ICS incidents have started.",next:"c1"},
+      {label:"Plug it into your personal laptop instead — it's not connected to plant systems.",quality:"risky",xp:20,
+       feedback:"Better instinct — but your laptop later joins the corporate network, email, and shared drives. Malware can wait, spread, and pivot. Unknown media should never be opened on any company-related device.",next:"c1"},
+      {label:"Do not connect it anywhere. Hand it to security / the OT cybersecurity team as a suspicious item.",quality:"good",xp:50,
+       feedback:"Correct. Unknown removable media is treated as hostile until proven otherwise. The OT security team can analyze it in an isolated sandbox and check CCTV for who dropped it.",next:"c1"}
+    ]},
+    c1:{type:"scene",title:"Two hours later",art:"usb",
+      text:"The OT security team analyzes the stick in an isolated environment. It contains a disguised remote-access trojan configured to beacon out from engineering workstations. The logo was copied from the company website.\n\nThis was a deliberate USB drop attack against your plant.",next:"d2"},
+    d2:{type:"dialog",speaker:"Sara",role:"OT Security Lead",
+      text:"Good catch. One more thing — Karim says he sometimes uses his own USB stick to move setpoint files between the office PC and the HMI. What should we tell him?",next:"dec2"},
+    dec2:{type:"decision",prompt:"What is the right practice for moving files into the OT environment?",options:[
+      {label:"Personal USB is fine if he scans it with antivirus first.",quality:"risky",xp:20,
+       feedback:"Antivirus on a personal stick is not sufficient — it misses unknown malware and malicious firmware (BadUSB). Personal media must never touch OT systems.",next:"info1"},
+      {label:"Only company-issued, authorized media, checked at a scanning kiosk / data diode process, per the removable media policy.",quality:"good",xp:50,
+       feedback:"Correct. Controlled transfer paths — authorized encrypted media, malware-scanning kiosks, or one-way gateways — are the only acceptable route into OT.",next:"info1"},
+      {label:"Email the files to himself instead.",quality:"bad",xp:10,
+       feedback:"That bypasses media controls but drags the IT attack surface (email, phishing, webmail) straight toward OT file transfer. Use the approved transfer process, not workarounds.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — removable media in OT",bullets:[
+      "Treat any found or unknown USB device as hostile; report it, never connect it.",
+      "Use only company-issued, authorized, encrypted media in OT areas.",
+      "Route all inbound files through a scanning kiosk or one-way transfer process.",
+      "Disable unused USB ports on HMIs, engineering workstations, and servers.",
+      "Report policy workarounds — they are risk signals, not shortcuts."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"You prevented a USB drop attack from reaching the control network and corrected an unsafe file-transfer habit. Removable media remains one of the most common initial access vectors into air-gapped and segmented OT environments.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"You find an unlabeled USB stick at the plant gate. The safest action is to:",
+       options:["Check it on an offline PC","Hand it to the OT security team without connecting it","Plug it into the HMI to identify the owner","Format it and reuse it"],answer:1,
+       explain:"Unknown media is treated as hostile and analyzed only by the security team in an isolated sandbox."},
+      {q:"Why are engineering workstations a prime target for USB malware?",
+       options:["They have the fastest USB ports","They are rarely switched on","They can program PLCs and reach the control network","They store only office documents"],answer:2,
+       explain:"Engineering workstations hold project files and direct connections to controllers — a perfect pivot point."},
+      {q:"Approved ways to bring files into OT include:",
+       options:["Any personal USB after antivirus scan","Company-issued media via a scanning kiosk or one-way gateway","Personal cloud storage links","Emailing files to the operator account"],answer:1,
+       explain:"Only controlled, authorized transfer paths are acceptable into OT environments."}
+    ]}
+  }
+},
+{
+  id:"remote", unit:"UNIT-02", cat:"Remote Access", minutes:9,
+  title:"The Vendor Who Called Twice",
+  desc:"An urgent support call, remote access to a live PLC — and a caller who is not who he claims to be.",
+  art:"remote",
+  nodes:{
+    start:{type:"scene",title:"District cooling plant — 14:10",art:"remote",
+      text:"You are the control room engineer. A chiller train is showing intermittent alarms. The phone rings: a man introduces himself as 'Tom from the chiller vendor's support team', says he saw the fault remotely, and asks you to enable the remote access connection and read him the TeamViewer ID from the engineering PC so he can fix it 'before it trips the whole train'.",next:"dec1"},
+    dec1:{type:"decision",prompt:"How do you respond to the caller?",options:[
+      {label:"Enable remote access and read the ID — the fault is urgent and he clearly knows the system.",quality:"bad",xp:10,
+       feedback:"Urgency plus insider-sounding detail is the classic social engineering pattern. Attackers research plants on LinkedIn, vendor sites, and leaked documents. You would be granting an unverified stranger a live session on control equipment.",next:"c1"},
+      {label:"Ask for his ticket number, hang up, and call the vendor back on the official number from the approved contact list.",quality:"good",xp:50,
+       feedback:"Correct. Verification through a known, independent channel defeats caller-ID spoofing and impersonation. Legitimate vendors expect this.",next:"c1"},
+      {label:"Tell him to email you the request and then decide.",quality:"risky",xp:20,
+       feedback:"Email alone proves little — sender addresses are easily spoofed. Callback verification via the official number plus an authorized change/ticket reference is the standard.",next:"c1"}
+    ]},
+    c1:{type:"scene",title:"Verification",art:"remote",
+      text:"You call the vendor's registered support line. They have no engineer named Tom and no open ticket for your site. The vendor confirms: several customers reported identical calls this week — an active social engineering campaign targeting remote access to industrial sites.",next:"d1"},
+    d1:{type:"dialog",speaker:"Nadia",role:"Plant Manager",
+      text:"Well handled. But the chiller alarm is real and we do need vendor support today. What is the correct way to run a genuine remote session?",next:"dec2"},
+    dec2:{type:"decision",prompt:"Choose the correct procedure for legitimate vendor remote access.",options:[
+      {label:"Approved request + MFA through the secure remote access gateway, session time-limited, supervised and logged, disabled afterwards.",quality:"good",xp:50,
+       feedback:"Correct. Remote access to OT is: requested and approved, authenticated with MFA, brokered through a hardened gateway (never direct internet exposure), supervised in real time, recorded, and disconnected when done.",next:"info1"},
+      {label:"Leave the permanent VPN tunnel open so the vendor can connect whenever needed.",quality:"bad",xp:10,
+       feedback:"Standing, always-on vendor tunnels are one of the most exploited paths into OT. Access must be enabled per session and disabled after.",next:"info1"},
+      {label:"Let the vendor connect first, then create the ticket afterwards if it works.",quality:"risky",xp:20,
+       feedback:"Approval and logging come before the session, not after — otherwise there is no accountability and no rollback point.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — secure remote vendor access",bullets:[
+      "Verify every support caller via an official callback number and ticket reference.",
+      "All remote OT access goes through an approved gateway with MFA — never direct RDP/TeamViewer exposed to the internet.",
+      "Sessions are approved, time-boxed, supervised, recorded, and disabled after use.",
+      "Vendors get unique named accounts with least privilege — no shared logins.",
+      "Report impersonation attempts immediately; others are being targeted too."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"You stopped an impersonation attempt and ran a compliant remote session instead. Remote access is consistently among the top initial attack vectors into industrial control systems.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"A caller claiming to be vendor support asks you to enable remote access urgently. You should:",
+       options:["Comply — faults are safety-critical","Ask him security questions of your own","Hang up and call back on the official vendor number with a ticket reference","Give him read-only access as a compromise"],answer:2,
+       explain:"Independent callback verification defeats impersonation and spoofed caller ID."},
+      {q:"Which remote access setup is acceptable for OT?",
+       options:["Permanent open VPN for the vendor","MFA-protected gateway, per-session approval, supervised and logged","Direct RDP from the internet with a strong password","Vendor's own unmanaged remote tool"],answer:1,
+       explain:"Brokered, approved, monitored, time-limited sessions are the standard for OT remote access."},
+      {q:"The strongest social engineering lever the fake caller used was:",
+       options:["Technical jargon","Urgency and apparent insider knowledge","A friendly tone","Calling at shift change"],answer:1,
+       explain:"Manufactured urgency pressures people to skip verification — the moment to slow down, not speed up."}
+    ]}
+  }
+},
+{
+  id:"hmi", unit:"UNIT-03", cat:"Patch & Change", minutes:8,
+  title:"The Unpatched HMI",
+  desc:"A critical vulnerability advisory lands mid-production. Patch now, patch later — or something smarter?",
+  art:"hmi",
+  nodes:{
+    start:{type:"scene",title:"Pumping station — planning office",art:"hmi",
+      text:"A security advisory is published: the HMI software running your pumping station has a critical remotely exploitable vulnerability. IT wants it patched within 48 hours, as they do for office PCs. Production says the station cannot stop this month. You are the OT engineer in the middle.",next:"dec1"},
+    dec1:{type:"decision",prompt:"What is your first move?",options:[
+      {label:"Push the patch tonight from the update server — 48-hour SLA is policy.",quality:"bad",xp:10,
+       feedback:"Untested patches on live OT can stop production or destabilize control — availability and safety come first in OT. Patching ICS follows change management with testing, vendor approval, and a maintenance window.",next:"c1"},
+      {label:"Ignore the advisory — the plant network is separate from the internet anyway.",quality:"bad",xp:10,
+       feedback:"'Segmented' is not 'invulnerable' — remote access, USB media, and IT/OT interconnects all reach that HMI. Doing nothing leaves a known critical hole open indefinitely.",next:"c1"},
+      {label:"Assess exposure, apply compensating controls now, and schedule a vendor-approved patch in the next maintenance window through change management.",quality:"good",xp:50,
+       feedback:"Correct. Risk-based OT patching: verify whether the vulnerable service is reachable, mitigate immediately (firewall rules, disable the service, tighten access), test the vendor-qualified patch, then deploy in a planned window with rollback and backups ready.",next:"c1"}
+    ]},
+    c1:{type:"dialog",speaker:"Imran",role:"Contract Manager",
+      text:"Head office is asking why OT can't just meet the same 48-hour patch SLA as IT. Give me the one-line answer for the steering meeting.",next:"dec2"},
+    dec2:{type:"decision",prompt:"Pick the best explanation.",options:[
+      {label:"OT teams are slower and need more staff.",quality:"bad",xp:10,
+       feedback:"It is not a resourcing excuse — it is a fundamentally different risk model.",next:"info1"},
+      {label:"In OT, an untested patch can itself cause the outage or safety event we're protecting against — so we mitigate immediately and patch through tested, scheduled changes.",quality:"good",xp:50,
+       feedback:"Exactly. IT prioritizes confidentiality; OT prioritizes safety and availability. Same goal, different sequence: mitigate now, patch safely.",next:"info1"},
+      {label:"Vendors forbid us from patching at all.",quality:"risky",xp:20,
+       feedback:"Vendors qualify patches and timing — they don't forbid patching. Overstating this becomes an excuse for permanent inaction.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — OT patch & change management",bullets:[
+      "Track advisories for every asset — you can only patch what your asset inventory knows exists.",
+      "Assess real exposure: is the vulnerable service reachable in your architecture?",
+      "Apply compensating controls immediately (segmentation, service hardening, access restriction).",
+      "Deploy vendor-qualified patches in planned maintenance windows with tested rollback and fresh backups.",
+      "Every change to OT goes through formal change management — including 'small' ones."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"You closed the exposure immediately without gambling plant availability, and patched safely on schedule. This mitigate-then-patch discipline is the core of OT vulnerability management.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"A critical vulnerability affects a production HMI. The best immediate action is:",
+       options:["Push the patch instantly","Apply compensating controls and schedule a tested patch via change management","Disconnect the HMI permanently","Wait for the annual shutdown"],answer:1,
+       explain:"Mitigate now, patch through a tested, planned change — protecting both security and availability."},
+      {q:"Why can't IT patch SLAs be copied directly to OT?",
+       options:["OT software has no patches","An untested OT patch can itself cause outages or safety events","OT systems patch themselves","Regulations prohibit OT patching"],answer:1,
+       explain:"OT prioritizes safety and availability, so patches are vendor-qualified and deployed in controlled windows."},
+      {q:"Effective vulnerability management in OT starts with:",
+       options:["Buying more firewalls","An accurate asset inventory","Disabling all alarms","Faster internet"],answer:1,
+       explain:"Without knowing your assets and versions, advisories cannot even be mapped to real exposure."}
+    ]}
+  }
+},
+{
+  id:"phish", unit:"UNIT-04", cat:"Phishing", minutes:8,
+  title:"Phishing the Control Room",
+  desc:"An email 'from the SCADA vendor' arrives with an urgent firmware notice — crafted for people exactly like you.",
+  art:"phish",
+  nodes:{
+    start:{type:"scene",title:"Control room — inbox, 09:20",art:"phish",
+      text:"An email arrives on your corporate account:\n\nFrom: support@sc4da-vendor-updates.com\nSubject: URGENT — Critical firmware recall affecting your RTU model\n\n'Dear Operator, a defect in firmware v4.2 may cause pump failures. Download the emergency patch immediately using the link below and apply it before end of shift. Failure to comply may void your support contract.'",next:"dec1"},
+    dec1:{type:"decision",prompt:"What stands out, and what do you do?",options:[
+      {label:"Download the patch — pump failure is a safety issue and the deadline is tight.",quality:"bad",xp:10,
+       feedback:"The email combines urgency, fear, authority and a deadline — the full phishing playbook. The sender domain is spoofed ('sc4da'), and real vendors never push firmware via email links.",next:"c1"},
+      {label:"Forward it to a colleague to ask if they got it too.",quality:"risky",xp:20,
+       feedback:"You spread the malicious link further. Suspicious mail is reported via the phishing button / security team, not forwarded around.",next:"c1"},
+      {label:"Don't click. Report it with the phishing report button and notify the OT security team, noting the spoofed domain.",quality:"good",xp:50,
+       feedback:"Correct. Misspelled domain, urgency, threats, unsolicited attachment/link, and an unusual delivery channel for firmware — five red flags. Reporting protects colleagues who received the same email.",next:"c1"}
+    ]},
+    c1:{type:"scene",title:"The bigger picture",art:"phish",
+      text:"Security confirms a targeted campaign: the attackers scraped staff names from LinkedIn and referenced your actual RTU model, taken from a public tender document. Three colleagues received the same email. One clicked — his corporate laptop is being reimaged and credentials reset.\n\nTargeted phishing against OT personnel aims to steal credentials or plant remote-access malware on machines that later touch the ICS environment.",next:"dec2"},
+    dec2:{type:"decision",prompt:"Your clicked-colleague asks what he should have checked first. Best single habit?",options:[
+      {label:"Check the real sender domain and hover over links before anything else; verify unexpected requests via a known official channel.",quality:"good",xp:50,
+       feedback:"Correct. Independent verification through known channels breaks nearly every phishing scenario — mail, SMS, or phone.",next:"info1"},
+      {label:"Only open emails that look professional.",quality:"bad",xp:10,
+       feedback:"Targeted phishing looks highly professional — polish proves nothing.",next:"info1"},
+      {label:"Open attachments only on the HMI, since it has no email client.",quality:"bad",xp:10,
+       feedback:"Never move unknown files toward OT systems — that is exactly the attacker's goal.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — phishing defense for OT personnel",bullets:[
+      "Urgency + authority + deadline = stop and verify. Real vendors and managers accept verification.",
+      "Check sender domains character by character; hover links before clicking.",
+      "Firmware and patches come only through official vendor portals and change management — never email links.",
+      "Report suspicious mail via the phishing button; never forward it.",
+      "Assume attackers know your name, role, and plant equipment from public sources."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"You spotted a targeted OT phishing campaign and triggered the response that protected your colleagues. People who verify are the strongest control layer a plant has.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"Which combination is the classic phishing signature?",
+       options:["Long email + attachments","Urgency, authority, and a threatening deadline","Company logo + signature","Sent on a weekend"],answer:1,
+       explain:"Pressure tactics are designed to make you act before you verify."},
+      {q:"Legitimate firmware updates for OT equipment arrive via:",
+       options:["Email links from support addresses","Official vendor portals and the change management process","WhatsApp from the vendor account manager","USB sticks by courier"],answer:1,
+       explain:"Updates are obtained from verified vendor sources and deployed through controlled change."},
+      {q:"You receive a suspicious email. The correct action is:",
+       options:["Delete it silently","Forward it to teammates as a warning","Report it via the phishing button / security team","Reply asking if it is genuine"],answer:2,
+       explain:"Reporting lets security block the campaign and warn everyone targeted."}
+    ]}
+  }
+},
+{
+  id:"net", unit:"UNIT-05", cat:"Network Security", minutes:9,
+  title:"The Cable That Crossed the Zone",
+  desc:"A convenient network shortcut quietly connects the office LAN to the control network — until you find it.",
+  art:"network",
+  nodes:{
+    start:{type:"scene",title:"Substation — commissioning week",art:"network",
+      text:"During commissioning support, you notice a small unmanaged switch under a desk. One cable runs to the office LAN wall port; another disappears into the control panel toward the SCADA network. A contractor explains: 'We bridged it so we can grab logs from our office laptops. Saves walking to the control room.'",next:"dec1"},
+    dec1:{type:"decision",prompt:"How do you handle the discovered bridge?",options:[
+      {label:"Leave it until commissioning ends — it's temporary and convenient for everyone.",quality:"bad",xp:10,
+       feedback:"'Temporary' bridges have enabled some of the most serious OT incidents. Every hour it exists, the control network inherits the office network's entire threat exposure — malware, compromised laptops, lateral movement.",next:"c1"},
+      {label:"Report it immediately to the OT security team so the unauthorized connection is removed and investigated, and a proper access path is arranged.",quality:"good",xp:50,
+       feedback:"Correct. Unauthorized IT/OT connections are security incidents, not conveniences. The team must also check what traffic crossed while it existed.",next:"c1"},
+      {label:"Unplug it yourself quietly and say nothing.",quality:"risky",xp:20,
+       feedback:"Removing it helps, but silence means no investigation of what crossed the bridge, no record, and the contractor will likely rebuild it tomorrow. Report it.",next:"c1"}
+    ]},
+    c1:{type:"dialog",speaker:"Sara",role:"OT Security Lead",
+      text:"Good find. The contractor genuinely needs log access, and honestly the request is reasonable. How should IT systems and people get data OUT of the control network properly?",next:"dec2"},
+    dec2:{type:"decision",prompt:"Choose the correct architecture for IT↔OT data exchange.",options:[
+      {label:"Through a DMZ: data is pushed to intermediary servers between firewalls — no direct sessions from office to control network.",quality:"good",xp:50,
+       feedback:"Correct. A demilitarized zone with brokered services (historians, file transfer, jump hosts) means IT consumers never touch the control network directly, and firewall rules stay tight and auditable.",next:"info1"},
+      {label:"A single firewall rule allowing the contractor's laptop through.",quality:"risky",xp:20,
+       feedback:"Direct exceptions accumulate into a firewall full of holes. Brokered access via the DMZ scales safely; ad-hoc allow rules do not.",next:"info1"},
+      {label:"Give OT systems internet access so logs can be emailed out.",quality:"bad",xp:10,
+       feedback:"Direct internet connectivity from control systems is among the highest-risk configurations that exist in OT.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — segmentation & the IT/OT boundary",bullets:[
+      "Zero unauthorized connections: every IT↔OT path is documented, firewalled, and approved.",
+      "Exchange data through a DMZ with brokered services — never direct office-to-control sessions.",
+      "Watch for rogue devices: unmanaged switches, Wi-Fi dongles, 4G routers, dual-homed laptops.",
+      "Segment inside OT too (zones and conduits per IEC 62443) — one infected HMI must not reach every PLC.",
+      "Report shortcuts without blame; convenience bridges are how attackers cross."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"You removed a live IT/OT bridge and replaced it with a proper brokered path. Network segmentation only protects the plant while it remains intact — and people are its integrity check.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"You find an undocumented cable linking office and control networks. It is:",
+       options:["Acceptable if temporary","A security incident to report immediately","Fine if traffic is light","IT's problem only"],answer:1,
+       explain:"Unauthorized IT/OT connections void segmentation and must be removed and investigated."},
+      {q:"The correct way for office systems to receive OT data is:",
+       options:["Direct connection to the SCADA switch","Via brokered services in a DMZ between firewalls","Internet access from the PLCs","A shared USB stick"],answer:1,
+       explain:"The DMZ pattern prevents any direct session between office and control networks."},
+      {q:"Zones and conduits inside the OT network (IEC 62443) exist to:",
+       options:["Speed up traffic","Contain an intrusion so one compromised device cannot reach everything","Reduce cabling costs","Simplify IP addressing"],answer:1,
+       explain:"Internal segmentation limits lateral movement after any single compromise."}
+    ]}
+  }
+},
+{
+  id:"ransom", unit:"UNIT-06", cat:"Incident Response", minutes:10,
+  title:"Ransomware at the Plant",
+  desc:"Screens lock across the site. The next thirty minutes decide whether production — and safety — survive the day.",
+  art:"ransom",
+  nodes:{
+    start:{type:"scene",title:"Site-wide alert — 11:47",art:"ransom",
+      text:"Office PCs across the facility suddenly display a ransom note. File shares are encrypting. In the control room, SCADA screens still work — for now. Phones start ringing. You are the senior operator on shift, and the site incident response plan names you as the first OT decision-maker.",next:"dec1"},
+    dec1:{type:"decision",prompt:"Your first action in the control room?",options:[
+      {label:"Follow the incident response plan: alert the crisis team, and prepare to isolate OT from IT at the defined boundary points while confirming safe manual/local control.",quality:"good",xp:50,
+       feedback:"Correct. Contain at the IT/OT boundary before the malware crosses it, keep the process safe and observable, and escalate through the pre-defined chain. This is exactly what the IR plan and drills exist for.",next:"c1"},
+      {label:"Shut down all PLCs immediately to protect them.",quality:"risky",xp:20,
+       feedback:"An uncontrolled emergency shutdown can itself create safety and equipment damage. Isolate networks and move to known-safe operating states per procedure — don't improvise a blackout.",next:"c1"},
+      {label:"Keep operating normally — SCADA still works, so it's an IT problem.",quality:"bad",xp:10,
+       feedback:"Ransomware crews deliberately pivot from IT into OT, and losing historians, engineering servers, or domain services can blind operations minutes later. Waiting forfeits your containment window.",next:"c1"}
+    ]},
+    c1:{type:"scene",title:"Containment",art:"ransom",
+      text:"The crisis team convenes. IT/OT boundary firewalls are switched to deny-all per the playbook. Operators confirm the process is stable on local control. The ransomware encrypted office systems and one historian in the DMZ — but never reached the control network.\n\nNow leadership asks: how fast can we restore, and can we trust our backups?",next:"dec2"},
+    dec2:{type:"decision",prompt:"Which backup strategy makes recovery credible?",options:[
+      {label:"Backups exist on the same network file share as the encrypted data.",quality:"bad",xp:10,
+       feedback:"Ransomware encrypts reachable backups first. Online-only backups on the same network are effectively no backups.",next:"dec3"},
+      {label:"Offline/immutable backups of critical OT data — PLC programs, HMI projects, configurations — tested by actual restore drills.",quality:"good",xp:50,
+       feedback:"Correct. Offline or immutable copies, stored separately, with documented restore procedures that have been genuinely tested — recovery time is decided long before the incident.",next:"dec3"},
+      {label:"The vendor probably keeps copies of our PLC programs.",quality:"risky",xp:20,
+       feedback:"'Probably' is not a recovery plan. Your latest tested configurations are your responsibility.",next:"dec3"}
+    ]},
+    dec3:{type:"decision",prompt:"During the incident, a journalist calls the control room asking for details. You should:",options:[
+      {label:"Give a short factual statement to be helpful.",quality:"bad",xp:10,
+       feedback:"Communications during incidents flow only through the designated crisis communications role — uncoordinated statements create legal, regulatory and security damage.",next:"info1"},
+      {label:"Refer the caller to the official communications contact and report the call to the crisis team.",quality:"good",xp:50,
+       feedback:"Correct. One voice speaks for the company during a crisis; everyone else routes and reports.",next:"info1"},
+      {label:"Deny anything is happening.",quality:"risky",xp:20,
+       feedback:"Don't engage at all — no confirmations, no denials. Route to communications and report the contact.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — OT incident response & resilience",bullets:[
+      "Know your role in the incident response plan before you need it — and drill it.",
+      "Contain early at the IT/OT boundary; keep the process in a safe, observable state.",
+      "Maintain offline/immutable backups of PLC programs, HMI projects and configs — and test restores.",
+      "Preserve evidence; do not wipe or reboot systems the responders need.",
+      "All external communication goes through the designated crisis role only."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"Your early containment kept ransomware out of the control network, and tested backups turned a potential week-long outage into a controlled recovery. Response quality is decided by preparation, not improvisation.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"Ransomware hits the office network while SCADA still works. Your priority is to:",
+       options:["Continue normally — it's IT's issue","Alert the crisis team and contain at the IT/OT boundary per the IR plan","Power off all PLCs instantly","Pay the ransom quickly"],answer:1,
+       explain:"Early boundary containment protects OT while keeping the process in a safe state."},
+      {q:"Backups that survive ransomware are:",
+       options:["On the main file share","Offline or immutable, stored separately, with tested restores","Kept only by the vendor","Unnecessary if you have antivirus"],answer:1,
+       explain:"Reachable backups get encrypted; only offline/immutable, restore-tested copies count."},
+      {q:"During an incident, media inquiries are handled by:",
+       options:["Whoever answers the phone","The designated crisis communications role only","The most senior engineer on shift","Social media replies"],answer:1,
+       explain:"A single coordinated voice prevents legal, regulatory, and security fallout."}
+    ]}
+  }
+},
+{
+  id:"plc", unit:"UNIT-07", cat:"Control Integrity", minutes:9,
+  title:"PLC Logic Manipulation",
+  desc:"A pump behaves strangely, the HMI shows normal — and the controller logic no longer matches the golden master.",
+  art:"plc",
+  nodes:{
+    start:{type:"scene",title:"Desalination plant — 05:55",art:"plc",
+      text:"Night shift reports pump P-204 cycling erratically, yet every HMI value reads normal. As the OT engineer, you upload the running PLC program and compare it against the approved 'golden master' backup.\n\nThe comparison flags modified rungs in the pump control logic — and there is no approved change request on record.",next:"d1"},
+    d1:{type:"dialog",speaker:"Hassan",role:"Shift Supervisor",
+      text:"Production wants P-204 stable before the morning peak. Can't you just download last month's project file from your laptop and move on? We can figure out the paperwork later.",next:"dec1"},
+    dec1:{type:"decision",prompt:"Unapproved logic changes are running in a live controller. What do you do?",options:[
+      {label:"Re-download an old project copy from your laptop and get production stable — investigate later.",quality:"risky",xp:20,
+       feedback:"Overwriting the controller destroys the evidence of what was changed, when, and by whom — and your laptop copy may not be the approved version. Stabilize the process using operational procedures, but preserve the modified program for investigation.",next:"c1"},
+      {label:"Treat it as a control integrity incident: keep the process safe, preserve the running program, and report to OT security before any overwrite.",quality:"good",xp:50,
+       feedback:"Correct. Unauthorized logic modification is one of the most serious events in OT — the exact technique used by attacks like Stuxnet and Triton. Evidence preservation and a controlled restore from the verified golden master are the professional response.",next:"c1"},
+      {label:"The process still runs and HMI looks fine — log it as a nuisance alarm and monitor.",quality:"bad",xp:10,
+       feedback:"Manipulated logic can be designed to look normal on the HMI while damaging equipment or masking unsafe states. 'It still runs' is exactly what the attacker wants you to conclude.",next:"c1"}
+    ]},
+    c1:{type:"scene",title:"The investigation",art:"plc",
+      text:"OT security traces the modification to an engineering workstation session at 02:13 — logged in with the shared 'engineer' account that half the department knows. The modified rungs suppressed a high-vibration interlock on P-204.\n\nWhoever made the change had full programming rights, and the shared account makes attribution impossible.",next:"dec2"},
+    dec2:{type:"decision",prompt:"Which combination actually prevents unauthorized logic changes?",options:[
+      {label:"Individual named accounts, PLC change detection with version control, controller keyswitch in RUN, and logic changes only via change management.",quality:"good",xp:50,
+       feedback:"Correct. Attribution (named accounts), detection (automated program comparison and versioning), prevention (physical keyswitch / access control on programming ports), and process (approved changes only) — defense in depth for control integrity.",next:"info1"},
+      {label:"Ban all PLC programming permanently.",quality:"bad",xp:10,
+       feedback:"Plants need legitimate logic changes to operate. Prohibition just drives changes underground — control comes from managed, attributable change, not from pretending change won't happen.",next:"info1"},
+      {label:"Set a password on the PLC itself and keep the shared account.",quality:"risky",xp:20,
+       feedback:"A controller password helps, but a shared engineering account still means no attribution, no accountability, and one leaked credential compromising everything. Named accounts and change detection are essential.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — protecting control logic integrity",bullets:[
+      "Maintain verified golden master backups of every PLC program — and compare regularly.",
+      "Use automated change detection / version control on controller logic and configurations.",
+      "Named individual accounts only on engineering workstations — never shared logins.",
+      "Keep controller keyswitches in RUN and restrict physical access to programming ports.",
+      "Treat any unapproved logic change as a security incident: preserve evidence, restore from verified backups."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"You detected and correctly handled a live logic manipulation that suppressed a safety interlock. Attacks on control integrity aim at physical consequences — detection depends on golden masters, change control, and engineers who refuse to overwrite evidence.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"Running PLC logic differs from the golden master with no approved change. Your first response is to:",
+       options:["Overwrite it with an old project file immediately","Keep the process safe, preserve the program, and report a control integrity incident","Ignore it if the HMI reads normal","Reboot the PLC"],answer:1,
+       explain:"Unauthorized logic modification is a serious incident — preserve evidence, then restore from the verified master under control."},
+      {q:"Why are shared engineering accounts dangerous in OT?",
+       options:["They cost more licenses","They make changes unattributable and one leaked credential exposes everything","They slow down login","They expire too quickly"],answer:1,
+       explain:"Attribution and accountability require named individual accounts."},
+      {q:"Manipulated control logic is especially dangerous because it can:",
+       options:["Only affect reports","Appear normal on the HMI while suppressing protections or damaging equipment","Be fixed by any reboot","Never persist after download"],answer:1,
+       explain:"Sophisticated ICS attacks hide physical manipulation behind normal-looking operator displays."}
+    ]}
+  }
+},
+{
+  id:"pwd", unit:"UNIT-08", cat:"Access Control", minutes:8,
+  title:"Default Passwords Expose Critical Systems",
+  desc:"Brand-new RTUs, factory credentials, and a contractor who plans to 'change them later'.",
+  art:"passwd",
+  nodes:{
+    start:{type:"scene",title:"Substation upgrade — commissioning day",art:"passwd",
+      text:"You are supervising the commissioning of new RTUs and managed switches. Spot-checking a device, you log in with 'admin / admin' — it works. So does the default password on the next three devices, and on the protection relay's web interface.\n\nThe integration contractor shrugs: 'Standard practice. We change them all at final handover in six weeks. Easier for the whole team to work this way.'",next:"dec1"},
+    dec1:{type:"decision",prompt:"Six weeks of factory-default credentials on grid-connected devices. Your call?",options:[
+      {label:"Accept it — commissioning is temporary and the team needs easy access.",quality:"bad",xp:10,
+       feedback:"Default credentials are published in vendor manuals and scanned for constantly. 'Temporary' devices on a live network are compromised in hours, not weeks — and commissioning periods are when attackers find the door wide open.",next:"c1"},
+      {label:"Require defaults to be changed per the hardening checklist before any device connects to the network — no exceptions.",quality:"good",xp:50,
+       feedback:"Correct. Hardening before connection is the rule: unique credentials, disabled unused services, and documented configuration are commissioning gate criteria, not handover paperwork.",next:"c1"},
+      {label:"Change defaults only on devices reachable from outside the substation.",quality:"risky",xp:20,
+       feedback:"Reachability changes — a contractor laptop, a temporary bridge, a misconfigured firewall — and suddenly 'internal only' devices are exposed. Every device gets hardened, regardless of assumed exposure.",next:"c1"}
+    ]},
+    c1:{type:"scene",title:"The wider check",art:"passwd",
+      text:"Prompted by your finding, OT security runs a credential audit across the site. Results: an HMI web panel, two network switches, and a UPS management card — all still on factory defaults, some installed years ago. One switch's default login was reachable from the office network through an approved but overly broad firewall rule.\n\nAny attacker with the vendor manual had administrator access waiting for them.",next:"d1"},
+    d1:{type:"dialog",speaker:"Sara",role:"OT Security Lead",
+      text:"We're fixing the audit findings now. For the team's new standard: how should credentials be managed across hundreds of OT devices going forward?",next:"dec2"},
+    dec2:{type:"decision",prompt:"Choose the sustainable credential practice for OT.",options:[
+      {label:"Unique credentials per device, stored in an approved password vault, MFA where supported, and periodic audits for defaults.",quality:"good",xp:50,
+       feedback:"Correct. Uniqueness contains any single compromise, the vault makes uniqueness workable at scale, MFA protects the critical interfaces, and audits catch what slips through.",next:"info1"},
+      {label:"One strong password shared across all devices so the team never gets locked out.",quality:"risky",xp:20,
+       feedback:"One credential to compromise them all — and it never gets changed because everything depends on it. Shared secrets don't scale down risk; they concentrate it.",next:"info1"},
+      {label:"Unique passwords, kept on a laminated card in the control room for quick access.",quality:"bad",xp:10,
+       feedback:"A visible password list defeats the purpose — visitors, contractors, photos, and CCTV all see it. Approved vaults exist precisely to make unique credentials practical and protected.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — credential hygiene in OT",bullets:[
+      "Change all factory-default credentials before a device ever joins the network.",
+      "Unique credentials per device and per person — no shared logins, no password reuse.",
+      "Use an approved password vault; never spreadsheets, sticky notes, or wall charts.",
+      "Enable MFA on remote access, engineering tools, and management interfaces that support it.",
+      "Audit regularly for defaults — new devices, spares, and vendor replacements reintroduce them."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"You closed a six-week default-credential window and triggered an audit that found years-old exposures. Default and shared passwords remain among the most common — and most preventable — findings in OT security assessments.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"Factory-default credentials on new OT devices must be changed:",
+       options:["At final handover","Before the device connects to any network","Only if internet-facing","During the next annual audit"],answer:1,
+       explain:"Hardening is a pre-connection gate — defaults are public knowledge and actively scanned for."},
+      {q:"The safest way to manage hundreds of unique OT device credentials is:",
+       options:["A shared team password","A laminated card in the control room","An approved password vault with access control","Memorizing them"],answer:2,
+       explain:"Vaults make unique, protected credentials practical at scale."},
+      {q:"Why must internal-only devices also be hardened?",
+       options:["Regulations mention them first","Reachability changes — bridges, laptops, and firewall rules can expose them at any time","They are more expensive","Vendors require it for warranty"],answer:1,
+       explain:"Assumed isolation fails quietly; hardening every device removes the standing risk."}
+    ]}
+  }
+},
+{
+  id:"tech", unit:"UNIT-09", cat:"Physical Security", minutes:8,
+  title:"The Fake Maintenance Technician",
+  desc:"Hi-vis vest, toolbox, confident smile, urgent job — and no appointment in the system.",
+  art:"tech",
+  nodes:{
+    start:{type:"scene",title:"Plant gate — 13:20",art:"tech",
+      text:"A man in a hi-vis vest and branded workwear arrives at reception carrying a toolbox. He says he's from the UPS service company for an urgent battery replacement in the control building: 'Head office booked it this morning — if I don't do it today, you risk losing backup power.'\n\nThere is no visitor appointment in the system. As you pass through the turnstile, he moves to follow you in.",next:"dec1"},
+    dec1:{type:"decision",prompt:"He's one step behind you at the turnstile. What do you do?",options:[
+      {label:"Hold the gate — the job sounds genuinely urgent and he clearly knows the site.",quality:"bad",xp:10,
+       feedback:"Tailgating is the number-one physical intrusion technique, and urgency plus authentic-looking workwear is the standard costume. Vest, toolbox, and confidence are available to anyone.",next:"c1"},
+      {label:"Politely stop him, direct him back to reception, and ask security to verify his identity and work order with the facility team before any access.",quality:"good",xp:50,
+       feedback:"Correct. No verified work order, no access — regardless of urgency or appearance. Challenging politely is professionalism, not rudeness, and genuine technicians expect it.",next:"c1"},
+      {label:"Let him wait inside the lobby unescorted while you go find the facilities manager.",quality:"risky",xp:20,
+       feedback:"Better than granting access, but an unattended visitor inside the perimeter can photograph layouts, plant devices, or slip deeper inside. Unverified visitors stay at reception, attended.",next:"c1"}
+    ]},
+    c1:{type:"scene",title:"Verification",art:"tech",
+      text:"Security checks: the UPS vendor has no job booked for your site today, and no technician matching his name. When asked for ID, the visitor becomes agitated, then leaves quickly. CCTV review shows he had already photographed the electrical room signage and the badge reader by the side entrance.\n\nThis was a physical social engineering attempt — reconnaissance, or worse.",next:"d1"},
+    d1:{type:"dialog",speaker:"Nadia",role:"Plant Manager",
+      text:"Good catch — and a wake-up call. I want a simple visitor rule everyone on site can follow, from operators to contractors. What should it be?",next:"dec2"},
+    dec2:{type:"decision",prompt:"Choose the visitor and contractor access standard for OT areas.",options:[
+      {label:"Verified ID plus confirmed work order before entry; logged and badged; escorted at all times inside control and electrical rooms.",quality:"good",xp:50,
+       feedback:"Correct. Verify, log, badge, escort — and anyone in an OT area without a badge or escort gets challenged politely, every time, by everyone.",next:"info1"},
+      {label:"Escort visitors only inside the server room; the rest of the plant is low risk.",quality:"risky",xp:20,
+       feedback:"Control panels, network cabinets, engineering desks, and field devices are all attack surfaces — physical access to OT areas is access to the control system.",next:"info1"},
+      {label:"Rely on CCTV — cameras cover everything anyway.",quality:"bad",xp:10,
+       feedback:"Cameras record intrusions; they don't prevent them. By the time footage is reviewed, a rogue device may already be plugged into your network.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — physical security for OT sites",bullets:[
+      "No verified identity and work order, no access — urgency never overrides verification.",
+      "Never allow tailgating: one badge, one person, every time, including for colleagues.",
+      "Visitors and contractors are logged, badged, and escorted in control and electrical areas.",
+      "Politely challenge anyone unbadged or unescorted — a challenge culture is a control.",
+      "Report suspicious visitors and photography immediately; reconnaissance precedes attacks."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"You stopped a physical social engineering attempt at the turnstile and hardened the site's visitor discipline. Physical access to OT equipment bypasses nearly every network control you have — the door is part of the perimeter.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"An unannounced technician with an urgent job but no appointment should be:",
+       options:["Escorted in — urgency is safety-relevant","Held at reception until identity and work order are verified","Allowed in if his company branding looks genuine","Sent directly to the control room supervisor"],answer:1,
+       explain:"Verification before access, always — genuine technicians expect and accept it."},
+      {q:"Tailgating through a controlled door is:",
+       options:["Courtesy between colleagues","A leading physical intrusion technique that must be refused politely","Acceptable during shift change","Only an issue at data centers"],answer:1,
+       explain:"One badge, one person — attackers rely on politeness to walk straight in."},
+      {q:"Escort requirements apply in OT areas because physical access allows an intruder to:",
+       options:["Use the coffee machine","Plug rogue devices into control networks and tamper with panels","See the weather","Read public notice boards"],answer:1,
+       explain:"Hands on equipment defeats network defenses — physical security is OT security."}
+    ]}
+  }
+},
+{
+  id:"vendorx", unit:"UNIT-10", cat:"Remote Access", minutes:9,
+  title:"Compromised Vendor Remote Access",
+  desc:"The 03:00 session comes from your trusted vendor's real account — but their engineer is on leave.",
+  art:"vendorx",
+  nodes:{
+    start:{type:"scene",title:"Security operations alert — 03:04",art:"vendorx",
+      text:"You are on call. The SOC phones: the remote access account of your turbine vendor authenticated at 03:00 and is actively browsing engineering file shares in the OT DMZ — outside any approved maintenance window.\n\nYou call the vendor's duty manager. Their assigned engineer is on annual leave, and nobody at the vendor is connected to your site right now. The credentials are real. The person using them is not.",next:"dec1"},
+    dec1:{type:"decision",prompt:"A live session on legitimate vendor credentials, confirmed unauthorized. First action?",options:[
+      {label:"Disable the vendor account and terminate the session immediately per the incident playbook, then escalate to the crisis team.",quality:"good",xp:50,
+       feedback:"Correct. Containment first: cut the access, preserve session logs, escalate. Every additional minute is lateral movement time toward the control network.",next:"c1"},
+      {label:"Keep watching quietly to learn what the attacker is after before acting.",quality:"risky",xp:20,
+       feedback:"Extended observation is a decision for trained incident responders with containment ready — not a default. In OT, the downside of 'watching' can be physical. Contain per playbook; responders can analyze preserved logs.",next:"c1"},
+      {label:"Email the vendor asking them to check with their engineer and wait for the reply.",quality:"bad",xp:10,
+       feedback:"You already confirmed by phone that the session is unauthorized. Waiting on email leaves an active intruder inside your DMZ for hours.",next:"c1"}
+    ]},
+    c1:{type:"scene",title:"The debrief",art:"vendorx",
+      text:"Investigation findings: the vendor engineer's laptop was compromised by phishing weeks ago; his credentials and VPN certificate were stolen. Your site's exposure was limited because vendor access terminated in the DMZ jump host — but two findings hurt: the account was enabled 24/7 under a legacy 'convenience' exception, and it had no MFA because 'the vendor's tool didn't support it'.\n\nThe attacker had eleven minutes inside. With MFA and per-session enablement, they would have had none.",next:"dec2"},
+    dec2:{type:"decision",prompt:"Which control set actually protects against compromised vendor credentials?",options:[
+      {label:"MFA mandatory with no exceptions, accounts disabled by default and enabled per approved session, least-privilege access, and alerting on vendor activity outside approved windows.",quality:"good",xp:50,
+       feedback:"Correct. Assume vendor credentials will eventually be stolen — MFA blocks their reuse, per-session enablement removes the standing door, least privilege limits the blast radius, and monitoring catches what remains.",next:"info1"},
+      {label:"Trust the vendor's own security program — their credentials, their responsibility.",quality:"bad",xp:10,
+       feedback:"Their laptop, your plant. Supply chain compromises are precisely why your controls must not depend on the vendor's hygiene. Contracts set their obligations; your architecture limits their access.",next:"info1"},
+      {label:"Require the vendor to use longer, more complex passwords.",quality:"risky",xp:20,
+       feedback:"Stolen credentials are stolen at any length — the phished laptop gave up the password and certificate together. Only MFA, session control, and monitoring address credential theft.",next:"info1"}
+    ]},
+    info1:{type:"info",title:"Best practices — resilient third-party access",bullets:[
+      "Assume vendor credentials will be stolen: MFA on all third-party access, no legacy exceptions.",
+      "Vendor accounts disabled by default — enabled per approved, time-boxed session only.",
+      "Least privilege per vendor and per task; access terminates in a monitored DMZ jump host.",
+      "Alert on vendor activity outside approved windows, and review vendor access rights regularly.",
+      "Set security requirements in contracts: incident notification, MFA support, patching, named engineers."],next:"sum"},
+    sum:{type:"summary",title:"Scenario complete",
+      text:"You contained a supply-chain credential compromise in minutes and closed the standing-access exceptions that made it possible. Trusted vendor channels are prime attacker targets precisely because they are trusted — resilience means your controls hold even when a partner's fail.",next:"quiz"},
+    quiz:{type:"quiz",questions:[
+      {q:"A vendor account shows unauthorized live activity, confirmed by the vendor. First action:",
+       options:["Email the vendor and wait","Terminate the session and disable the account per playbook, then escalate","Observe the attacker to learn intent","Restart the firewall"],answer:1,
+       explain:"Containment first — cut access, preserve logs, escalate through the incident process."},
+      {q:"The control that most directly defeats stolen vendor passwords is:",
+       options:["Longer passwords","Multi-factor authentication with no exceptions","Annual awareness posters","Faster VPN hardware"],answer:1,
+       explain:"MFA makes a stolen password insufficient — the single highest-value control for remote access."},
+      {q:"Vendor remote accounts should be:",
+       options:["Enabled 24/7 for support convenience","Disabled by default and enabled per approved, time-boxed session","Shared between the vendor's engineers","Exempt from monitoring as trusted parties"],answer:1,
+       explain:"Standing access is a standing door; per-session enablement removes it."}
+    ]}
+  }
+}
+];
+
+const EXAM = {
+  pass: 11, // out of 14
+  questions:[
+    {q:"An unknown USB device found on site should be:",options:["Checked on the HMI","Handed to the security team without connecting it","Scanned on a personal laptop","Reused after formatting"],answer:1},
+    {q:"Files enter the OT environment only via:",options:["Any antivirus-scanned USB","Authorized media through scanning kiosks / one-way transfer","Personal cloud drives","Email attachments"],answer:1},
+    {q:"An unsolicited caller requesting remote access is verified by:",options:["His knowledge of the plant","Callback on the official vendor number + ticket reference","His caller ID","A convincing email signature"],answer:1},
+    {q:"Acceptable vendor remote access to OT is:",options:["A permanent open VPN","MFA gateway, per-session approval, supervised, logged, then disabled","Internet-exposed RDP","The vendor's own unmanaged tool"],answer:1},
+    {q:"For a critical vulnerability on a live HMI, first you:",options:["Push the patch immediately","Apply compensating controls, then patch via tested change in a window","Ignore it — the network is segmented","Wait for annual shutdown"],answer:1},
+    {q:"OT patching differs from IT because:",options:["OT has no vendors","An untested patch can itself cause outages or safety events","OT patches are free","IT patches are optional"],answer:1},
+    {q:"Urgency + authority + a deadline in an email signals:",options:["An efficient sender","A likely phishing attempt — verify via known channels","A legal notice","Normal vendor practice"],answer:1},
+    {q:"An undocumented cable bridging office and control networks is:",options:["Fine if temporary","A reportable security incident","Acceptable during commissioning","A network team convenience"],answer:1},
+    {q:"IT systems should receive OT data through:",options:["Direct SCADA connections","Brokered services in a DMZ between firewalls","PLC internet access","Shared USB sticks"],answer:1},
+    {q:"When ransomware hits IT while SCADA still runs, you:",options:["Carry on normally","Contain at the IT/OT boundary per the incident response plan","Power off all controllers instantly","Negotiate with the attackers"],answer:1},
+    {q:"Running PLC logic differs from the golden master with no approved change. This is:",options:["A reportable control integrity incident — preserve evidence before any overwrite","Normal configuration drift","Fixed by downloading any old copy","Only the vendor's concern"],answer:0},
+    {q:"Factory-default credentials on OT devices must be changed:",options:["At project handover","Before the device connects to any network","Only on internet-facing devices","Whenever convenient"],answer:1},
+    {q:"An unannounced technician without a verifiable work order is:",options:["Escorted in if he looks professional","Given a visitor badge and left to work","Held at reception until identity and work order are verified","Sent to wait in the control room"],answer:2},
+    {q:"The SOC confirms unauthorized live activity on a vendor remote account. First action:",options:["Email the vendor and await reply","Monitor quietly to learn intent","Terminate the session, disable the account per playbook, and escalate","Reboot the jump server"],answer:2}
+  ]
+};
+
+const BADGES = [
+  {id:"first",  name:"First Response", desc:"Complete your first module", art:"badge_first",  test:s=>doneCount(s)>=1},
+  {id:"streak", name:"On Watch",       desc:"3-day learning streak",     art:"badge_streak", test:s=>s.streak>=3},
+  {id:"perfect",name:"Zero Defects",   desc:"Score 100% on a module quiz",art:"badge_perfect",test:s=>Object.values(s.modules).some(m=>m.perfect)},
+  {id:"level5", name:"Senior Operator",desc:"Reach Level 5",             art:"badge_level",  test:s=>levelOf(s.xp)>=5},
+  {id:"all",    name:"Full Coverage",  desc:"Complete all 10 modules",    art:"badge_all",    test:s=>doneCount(s)>=MODULES.length},
+  {id:"exam",   name:"Certified Defender", desc:"Pass the final exam",   art:"badge_exam",   test:s=>s.examPassed}
+];
+</script>
+<script>
+/* ============================================================
+   ENGINE — state, storage, gamification, views, scenario player
+   ============================================================ */
+
+/* ---------- storage (localStorage with in-memory fallback) ---------- */
+const memStore = {};
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return memStore[k] ?? null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){ memStore[k]=v; } }
+};
+const SKEY = "otcr_state_v1";
+
+function defaultState(){
+  return { xp:0, streak:1, lastVisit:null, name:"", theme:"dark",
+    badges:[], modules:{}, examPassed:false, examScore:null, examDate:null };
+}
+let S = (()=>{ try{ return Object.assign(defaultState(), JSON.parse(store.get(SKEY)||"{}")); }
+              catch(e){ return defaultState(); } })();
+function save(){ store.set(SKEY, JSON.stringify(S)); }
+
+/* ---------- helpers ---------- */
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function levelOf(xp){ return Math.floor(xp/300)+1; }
+function levelPct(xp){ return Math.round((xp%300)/3); }
+function doneCount(s){ return MODULES.filter(m=>s.modules[m.id]?.done).length; }
+function mState(id){ if(!S.modules[id]) S.modules[id]={node:"start",steps:0,done:false,score:0,total:0,perfect:false}; return S.modules[id]; }
+function modProgress(m){
+  const st=S.modules[m.id]; if(!st) return 0; if(st.done) return 100;
+  const total=Object.keys(m.nodes).length + m.nodes.quiz.questions.length;
+  return Math.min(95, Math.round(100*st.steps/total));
+}
+
+/* ---------- streak ---------- */
+(function trackStreak(){
+  const today = new Date().toISOString().slice(0,10);
+  if(S.lastVisit !== today){
+    const y = new Date(Date.now()-864e5).toISOString().slice(0,10);
+    S.streak = (S.lastVisit === y) ? (S.streak||0)+1 : 1;
+    S.lastVisit = today; save();
+  }
+})();
+
+/* ---------- toasts & badges ---------- */
+function toast(msg, cls){
+  const t=document.createElement("div"); t.className="toast";
+  t.innerHTML = `<span class="led ${cls||'red'}"></span>${msg}`;
+  $("#toasts").appendChild(t);
+  setTimeout(()=>{ t.style.opacity="0"; t.style.transition="opacity .4s"; setTimeout(()=>t.remove(),450); }, 3200);
+}
+function awardXP(n, label){ if(!n) return; S.xp+=n; save(); toast(`+${n} XP — ${esc(label||"progress")}`,"amber"); renderTelemetry(); }
+function checkBadges(){
+  BADGES.forEach(b=>{
+    if(!S.badges.includes(b.id) && b.test(S)){
+      S.badges.push(b.id); save();
+      toast(`BADGE UNLOCKED — ${b.name}`,"green");
+    }
+  });
+}
+
+/* ---------- theme ---------- */
+function applyTheme(){ document.documentElement.dataset.theme = S.theme; }
+function toggleTheme(){ S.theme = S.theme==="dark" ? "light" : "dark"; save(); applyTheme(); renderTelemetry(); }
+
+/* ---------- telemetry (header) ---------- */
+function renderTelemetry(){
+  const lvl=levelOf(S.xp);
+  $("#telemetry").innerHTML = `
+    <span class="tele"><span class="led amber"></span>XP <b>${S.xp}</b></span>
+    <span class="tele"><span class="led"></span>LVL <b>${lvl}</b></span>
+    <span class="tele"><span class="led red"></span>STREAK <b>${S.streak}d</b></span>
+    <span class="tele">UNITS <b>${doneCount(S)}/${MODULES.length}</b></span>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle dark or light theme">${S.theme==="dark"?"LIGHT":"DARK"} MODE</button>`;
+  $("#themeBtn").addEventListener("click", toggleTheme);
+}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+let view = {name:"dash"};
+let searchTerm = "", catFilter = null;
+
+function go(v){ view=v; render(); window.scrollTo({top:0}); $("#app").focus({preventScroll:true}); }
+
+function render(){
+  renderTelemetry();
+  if(view.name==="dash") renderDash();
+  else if(view.name==="module") renderModule(view.id);
+  else if(view.name==="exam") renderExam();
+  else if(view.name==="cert") renderCert();
+}
+
+/* ---------- dashboard ---------- */
+function renderDash(){
+  const lvl=levelOf(S.xp), done=doneCount(S);
+  const allDone = done>=MODULES.length;
+  const startedAny = S.xp>0 || done>0;
+
+  const filtered = MODULES.filter(m=>{
+    const t=(m.title+" "+m.desc+" "+m.cat).toLowerCase();
+    return (!searchTerm || t.includes(searchTerm)) && (!catFilter || m.cat===catFilter);
+  });
+
+  $("#app").innerHTML = `
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Scenario-based awareness training</div>
+      <h1>Defend the plant.<br><span class="accent">One decision</span> at a time.</h1>
+      <p class="lede">Ten immersive OT/ICS incident scenarios drawn from real attack patterns — USB drops, logic manipulation, default credentials, fake technicians, industrial ransomware. Make the calls, see the consequences, earn your certification.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="ctaStart">${startedAny?"Resume Training":"Begin Training"}</button>
+        <button class="btn btn-ghost" id="ctaExam">${S.examPassed?"View Certificate":"Final Exam"}</button>
+      </div>
+    </div>
+    <div class="panel hero-visual" aria-hidden="true">${ART.plant}</div>
+  </section>
+
+  <div class="stats">
+    <div class="panel stat"><div class="k">Experience</div><div class="v">${S.xp}<small> XP</small></div>
+      <div class="xpbar" role="progressbar" aria-valuenow="${levelPct(S.xp)}" aria-valuemin="0" aria-valuemax="100" aria-label="Progress to next level"><i style="width:${levelPct(S.xp)}%"></i></div></div>
+    <div class="panel stat"><div class="k">Level</div><div class="v">${lvl}<small> / operator grade</small></div></div>
+    <div class="panel stat"><div class="k">Streak</div><div class="v">${S.streak}<small> day${S.streak===1?"":"s"}</small></div></div>
+    <div class="panel stat"><div class="k">Modules</div><div class="v">${done}<small> / ${MODULES.length} complete</small></div></div>
+  </div>
+
+  <div class="section-title">Go further with Xploit Academy</div>
+  <p class="feature-note">// This range builds instinct. These accredited programs build mastery.</p>
+  <div class="feature-grid">
+    <a class="feature-card" href="https://www.xploitacademy.com/courses/ics-cybersecurity" target="_blank" rel="noopener noreferrer" aria-label="Advanced OT Cyber Security (ICS-DCS-SCADA) course on xploitacademy.com">
+      <div class="fc-top">
+        <span class="fc-mark"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="11" y="8" width="18" height="24" rx="2"/><path d="M16 14h8M16 20h8M16 26h5"/><path d="M11 14H6M11 20H6M11 26H6M29 14h5M29 20h5M29 26h5"/></svg></span>
+        <span class="fc-kicker">Advanced · Hands-on</span>
+      </div>
+      <div class="fc-title">Advanced OT Cyber Security</div>
+      <div class="fc-desc">ICS · DCS · SCADA. Build your own labs, dissect Modbus, S7comm, DNP3, OPC UA &amp; BACnet, program PLCs, run ICS penetration tests, and engineer real defense-in-depth.</div>
+      <div class="fc-meta"><span>6 HOURS</span><span>HANDS-ON LABS</span><span>CERTIFICATE</span><span>LIFETIME ACCESS</span></div>
+      <span class="fc-cta">Explore the course <span class="arrow">→</span></span>
+    </a>
+    <a class="feature-card" href="https://www.xploitacademy.com/courses/ot-sat" target="_blank" rel="noopener noreferrer" aria-label="OT/ICS Security Awareness (SAT) course on xploitacademy.com">
+      <div class="fc-top">
+        <span class="fc-mark"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 5l12 4v9c0 8-5 13-12 17-7-4-12-9-12-17V9z"/><circle cx="20" cy="17" r="3.5"/><path d="M14 27c0-3.6 2.7-6 6-6s6 2.4 6 6"/></svg></span>
+        <span class="fc-kicker">Awareness · Compliance</span>
+      </div>
+      <div class="fc-title">OT/ICS Security Awareness · SAT</div>
+      <div class="fc-desc">Role-based awareness for operators, engineers &amp; management — the golden rules of OT security, mapped to IEC 62443, NIS2, NERC CIP, NCA OTCC, CMMC &amp; NIST 800-82 R3.</div>
+      <div class="fc-meta"><span>WORKFORCE-WIDE</span><span>IEC 62443</span><span>NIS2 · NERC CIP</span><span>CUSTOMIZABLE</span></div>
+      <span class="fc-cta">Explore the course <span class="arrow">→</span></span>
+    </a>
+  </div>
+
+  <div class="section-title">Training units</div>
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="SEARCH SCENARIOS…" value="${esc(searchTerm)}" aria-label="Search scenarios">
+    <button class="chip" data-cat="" aria-pressed="${!catFilter}">ALL</button>
+    ${CATEGORIES.map(c=>`<button class="chip" data-cat="${esc(c)}" aria-pressed="${catFilter===c}">${esc(c).toUpperCase()}</button>`).join("")}
+  </div>
+  <div class="units">
+    ${filtered.map(m=>{
+      const st=S.modules[m.id], pct=modProgress(m);
+      const status = st?.done ? `<span class="tag green">COMPLETE</span>` : (st?.steps? `<span class="tag amber">IN PROGRESS</span>` : `<span class="tag">NOT STARTED</span>`);
+      return `<button class="unit ${st?.done?"done":""}" data-mod="${m.id}" aria-label="Open module: ${esc(m.title)}">
+        <div class="unit-head"><span class="led ${st?.done?"":"red"}"></span>${m.unit} · ${esc(m.cat)} <span style="margin-left:auto">${m.minutes} MIN</span></div>
+        <div class="unit-art" aria-hidden="true">${ART[m.art]}</div>
+        <div class="unit-body">
+          <h3>${esc(m.title)}</h3>
+          <p>${esc(m.desc)}</p>
+          <div class="unit-foot"><div class="progress-mini" aria-hidden="true"><i style="width:${pct}%"></i></div>${status}</div>
+        </div>
+      </button>`;
+    }).join("") || `<div class="panel panel-body" style="grid-column:1/-1">No scenarios match your search. Clear the filter to see all units.</div>`}
+  </div>
+
+  <div class="section-title">Certification</div>
+  <div class="panel">
+    <div class="panel-head"><span class="led ${allDone?"":"amber"}"></span>FINAL EXAM · ${EXAM.questions.length} QUESTIONS · PASS ${EXAM.pass}/${EXAM.questions.length}</div>
+    <div class="gate">
+      ${ART.shield}
+      ${S.examPassed
+        ? `<p>Exam passed with <b>${S.examScore}/${EXAM.questions.length}</b> on ${esc(S.examDate)}. Your certificate is ready.</p>
+           <button class="btn btn-primary" id="gateBtn">View Certificate</button>`
+        : allDone
+        ? `<p>All units complete. Pass the final exam to earn your <b>OT Cybersecurity Awareness Certificate</b>.</p>
+           <button class="btn btn-primary" id="gateBtn">Start Final Exam</button>`
+        : `<p class="node-text dim">Complete all ${MODULES.length} training units to unlock the certification exam. ${MODULES.length-done} remaining.</p>
+           <button class="btn btn-ghost" disabled>Exam Locked</button>`}
+    </div>
+  </div>
+
+  <div class="section-title">Achievements</div>
+  <div class="badges">
+    ${BADGES.map(b=>`<div class="badge ${S.badges.includes(b.id)?"":"locked"}">
+      <div class="b-ico">${ART[b.art]}</div><div class="b-name">${esc(b.name)}</div><div class="b-desc">${esc(b.desc)}</div>
+    </div>`).join("")}
+  </div>
+
+  <footer class="site">
+    <span class="led"></span> SYSTEM NOMINAL · OT CYBER RANGE BY XPLOIT ACADEMY · v2.0
+    <span style="margin-left:auto">OFFLINE-CAPABLE · JSON-DRIVEN SCENARIO ENGINE · PROGRESS SAVED LOCALLY</span>
+  </footer>`;
+
+  $("#ctaStart").addEventListener("click", ()=>{
+    const next = MODULES.find(m=>!S.modules[m.id]?.done) || MODULES[0];
+    go({name:"module", id:next.id});
+  });
+  $("#ctaExam").addEventListener("click", ()=> S.examPassed ? go({name:"cert"}) : (doneCount(S)>=MODULES.length ? go({name:"exam"}) : toast("Complete all units to unlock the exam","amber")));
+  const gate=$("#gateBtn"); if(gate) gate.addEventListener("click", ()=> S.examPassed ? go({name:"cert"}) : go({name:"exam"}));
+  $("#q").addEventListener("input", e=>{ searchTerm=e.target.value.toLowerCase(); renderDash(); const q=$("#q"); q.focus(); q.setSelectionRange(q.value.length,q.value.length); });
+  document.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{ catFilter=ch.dataset.cat||null; renderDash(); }));
+  document.querySelectorAll(".unit").forEach(u=>u.addEventListener("click",()=>go({name:"module",id:u.dataset.mod})));
+}
+
+/* ---------- module player ---------- */
+function renderModule(id){
+  const mod = MODULES.find(m=>m.id===id);
+  const st = mState(id);
+  if(st.done && st.node==="quiz") st.node="start"; // review mode restarts
+  const node = mod.nodes[st.node] || mod.nodes.start;
+  const totalNodes = Object.keys(mod.nodes).length;
+
+  let inner="";
+  if(node.type==="scene"){
+    inner = `${node.art?`<div class="scene-art">${ART[node.art]}</div>`:""}
+      <div class="panel-body">
+        <div class="node-title">${esc(node.title)}</div>
+        <p class="node-text">${esc(node.text)}</p>
+        <div class="player-nav"><button class="btn btn-primary" data-next="${node.next}">Continue</button>
+        <span class="stepper">STEP ${st.steps+1}</span></div>
+      </div>`;
+  }
+  else if(node.type==="dialog"){
+    inner = `<div class="panel-body">
+      <div class="dialog"><div class="avatar" aria-hidden="true">${esc(node.speaker[0])}</div>
+        <div><div class="who">${esc(node.speaker)} — ${esc(node.role)}</div>
+        <p class="node-text">${esc(node.text)}</p></div></div>
+      <div class="player-nav"><button class="btn btn-primary" data-next="${node.next}">Continue</button>
+      <span class="stepper">STEP ${st.steps+1}</span></div></div>`;
+  }
+  else if(node.type==="decision"){
+    inner = `<div class="panel-body">
+      <div class="node-title">Decision point</div>
+      <p class="node-text" style="font-weight:600">${esc(node.prompt)}</p>
+      <div class="options">${node.options.map((o,i)=>
+        `<button class="opt" data-opt="${i}"><span class="key">${String.fromCharCode(65+i)}</span><span>${esc(o.label)}</span></button>`).join("")}
+      </div></div>`;
+  }
+  else if(node.type==="info"){
+    inner = `<div class="panel-body">
+      <div class="node-title">${esc(node.title)}</div>
+      <ul class="bullets">${node.bullets.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>
+      <div class="player-nav"><button class="btn btn-primary" data-next="${node.next}">Continue</button></div></div>`;
+  }
+  else if(node.type==="summary"){
+    inner = `<div class="panel-body">
+      <div class="node-title">${esc(node.title)}</div>
+      <p class="node-text">${esc(node.text)}</p>
+      <div class="player-nav"><button class="btn btn-primary" data-next="quiz">Knowledge Check</button></div></div>`;
+  }
+  else if(node.type==="quiz"){
+    return renderQuiz(mod, st, node);
+  }
+
+  $("#app").innerHTML = `
+    <div class="player">
+      <div class="player-head">
+        <button class="btn btn-ghost btn-sm" id="backBtn">← Dashboard</button>
+        <div><div class="crumbs">${mod.unit} // ${esc(mod.cat).toUpperCase()}</div><h2>${esc(mod.title)}</h2></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="led red"></span>SCENARIO ACTIVE · NODE ${Math.min(st.steps+1,totalNodes)}/${totalNodes}</div>
+        ${inner}
+      </div>
+    </div>`;
+
+  $("#backBtn").addEventListener("click",()=>go({name:"dash"}));
+  document.querySelectorAll("[data-next]").forEach(b=>b.addEventListener("click",()=>{
+    st.node=b.dataset.next; st.steps++; save(); renderModule(id);
+  }));
+  document.querySelectorAll("[data-opt]").forEach(b=>b.addEventListener("click",()=>{
+    const o=node.options[+b.dataset.opt];
+    awardXP(o.xp, o.quality==="good"?"strong decision":"lesson learned");
+    showFeedback(mod, st, node, o);
+  }));
+}
+
+function showFeedback(mod, st, node, o){
+  const labels={good:"CORRECT DECISION",risky:"PARTIALLY SAFE",bad:"HIGH-RISK DECISION"};
+  const panel = $("#app .panel .panel-body");
+  panel.innerHTML = `
+    <div class="node-title">Consequence</div>
+    <p class="node-text dim" style="margin-bottom:12px">You chose: “${esc(o.label)}”</p>
+    <div class="feedback ${o.quality}">
+      <div class="fb-head"><span class="led ${o.quality==="good"?"":o.quality==="risky"?"amber":"red"}"></span>${labels[o.quality]}<span class="fb-xp">+${o.xp} XP</span></div>
+      <p class="node-text">${esc(o.feedback)}</p>
+    </div>
+    <div class="player-nav"><button class="btn btn-primary" id="fbNext">Continue</button></div>`;
+  $("#fbNext").addEventListener("click",()=>{ st.node=o.next; st.steps++; save(); renderModule(mod.id); });
+  $("#fbNext").focus();
+}
+
+/* ---------- module quiz ---------- */
+function renderQuiz(mod, st, node){
+  if(st.qIndex===undefined || st.qIndex>=node.questions.length){ st.qIndex=0; st.qScore=0; }
+  const qi=st.qIndex, Q=node.questions[qi];
+
+  $("#app").innerHTML = `
+    <div class="player">
+      <div class="player-head">
+        <button class="btn btn-ghost btn-sm" id="backBtn">← Dashboard</button>
+        <div><div class="crumbs">${mod.unit} // KNOWLEDGE CHECK</div><h2>${esc(mod.title)}</h2></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="led amber"></span>QUESTION ${qi+1}/${node.questions.length}</div>
+        <div class="panel-body">
+          <p class="quiz-q">${esc(Q.q)}</p>
+          <div class="options">${Q.options.map((op,i)=>
+            `<button class="opt" data-q="${i}"><span class="key">${String.fromCharCode(65+i)}</span><span>${esc(op)}</span></button>`).join("")}
+          </div>
+          <div id="qResult"></div>
+        </div>
+      </div>
+    </div>`;
+  $("#backBtn").addEventListener("click",()=>go({name:"dash"}));
+
+  document.querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>{
+    const pick=+b.dataset.q, correct=pick===Q.answer;
+    document.querySelectorAll("[data-q]").forEach((x,i)=>{
+      x.disabled=true;
+      if(i===Q.answer) x.classList.add("correct");
+      else if(i===pick) x.classList.add("wrong");
+    });
+    if(correct){ st.qScore++; awardXP(25,"correct answer"); }
+    $("#qResult").innerHTML = `
+      <p class="explain"><b style="color:${correct?"var(--green)":"var(--red)"}">${correct?"Correct.":"Not quite."}</b> ${esc(Q.explain)}</p>
+      <div class="player-nav"><button class="btn btn-primary" id="qNext">${qi+1<node.questions.length?"Next Question":"Finish Module"}</button></div>`;
+    $("#qNext").addEventListener("click",()=>{
+      st.qIndex++;
+      if(st.qIndex<node.questions.length){ save(); renderQuiz(mod, st, node); }
+      else finishModule(mod, st, node);
+    });
+    $("#qNext").focus();
+  }));
+}
+
+function finishModule(mod, st, node){
+  const first=!st.done;
+  st.done=true; st.score=st.qScore; st.total=node.questions.length;
+  st.perfect = st.perfect || st.qScore===node.questions.length;
+  st.node="start"; st.steps=0; st.qIndex=undefined; save();
+  if(first) awardXP(100,"module complete");
+  checkBadges(); save();
+
+  const pct=Math.round(100*st.score/st.total);
+  $("#app").innerHTML = `
+    <div class="player"><div class="panel">
+      <div class="panel-head"><span class="led"></span>MODULE COMPLETE</div>
+      <div class="gate">
+        ${ART.shield}
+        <h2 style="text-transform:uppercase">${esc(mod.title)}</h2>
+        <p class="node-text">Knowledge check: <b>${st.score}/${st.total}</b> (${pct}%)${st.perfect?" — perfect score.":""}</p>
+        <p class="node-text dim">Personalized guidance: ${
+          pct===100 ? "Excellent situational judgment — you applied every control correctly. Consider mentoring colleagues on this topic."
+          : pct>=60 ? "Solid grasp of the fundamentals. Revisit the best-practice checklist in this unit to close the remaining gaps."
+          : "Re-run this scenario and focus on the consequence explanations — the reasoning matters more than the score."}</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+          <button class="btn btn-primary" id="doneBack">Back to Dashboard</button>
+          <button class="btn btn-ghost" id="doneRetry">Replay Scenario</button>
+        </div>
+      </div>
+    </div></div>`;
+  $("#doneBack").addEventListener("click",()=>go({name:"dash"}));
+  $("#doneRetry").addEventListener("click",()=>go({name:"module",id:mod.id}));
+}
+
+/* ---------- final exam ---------- */
+let examRun=null;
+function renderExam(){
+  if(doneCount(S)<MODULES.length){ go({name:"dash"}); return; }
+  if(!examRun) examRun={i:0,score:0};
+  if(examRun.i>=EXAM.questions.length){ return finishExam(); }
+  const Q=EXAM.questions[examRun.i];
+  $("#app").innerHTML = `
+    <div class="player">
+      <div class="player-head">
+        <button class="btn btn-ghost btn-sm" id="backBtn">← Dashboard</button>
+        <div><div class="crumbs">CERTIFICATION // FINAL EXAM</div><h2>OT Cybersecurity Awareness</h2></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="led red"></span>QUESTION ${examRun.i+1}/${EXAM.questions.length} · PASS MARK ${EXAM.pass}/${EXAM.questions.length} · SCORE ${examRun.score}</div>
+        <div class="panel-body">
+          <p class="quiz-q">${esc(Q.q)}</p>
+          <div class="options">${Q.options.map((op,i)=>
+            `<button class="opt" data-q="${i}"><span class="key">${String.fromCharCode(65+i)}</span><span>${esc(op)}</span></button>`).join("")}</div>
+        </div>
+      </div>
+    </div>`;
+  $("#backBtn").addEventListener("click",()=>{ examRun=null; go({name:"dash"}); });
+  document.querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>{
+    if(+b.dataset.q===Q.answer) examRun.score++;
+    examRun.i++; renderExam();
+  }));
+}
+function finishExam(){
+  const passed = examRun.score>=EXAM.pass;
+  if(passed){
+    S.examPassed=true; S.examScore=examRun.score;
+    S.examDate=new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+    awardXP(250,"exam passed"); checkBadges(); save();
+  }
+  const sc=examRun.score; examRun=null;
+  $("#app").innerHTML = `
+    <div class="player"><div class="panel"><div class="panel-head"><span class="led ${passed?"":"red"}"></span>EXAM RESULT</div>
+      <div class="gate">${ART.shield}
+        <h2 style="text-transform:uppercase">${passed?"Certification achieved":"Not passed yet"}</h2>
+        <p class="node-text">Score: <b>${sc}/${EXAM.questions.length}</b> — pass mark ${EXAM.pass}.</p>
+        <p class="node-text dim">${passed?"Outstanding. Your certificate is ready to view and print.":"Review the scenario best-practice checklists and try again — the exam can be retaken any time."}</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+          ${passed?`<button class="btn btn-primary" id="toCert">View Certificate</button>`:`<button class="btn btn-primary" id="retryExam">Retake Exam</button>`}
+          <button class="btn btn-ghost" id="toDash">Dashboard</button>
+        </div>
+      </div></div></div>`;
+  const c=$("#toCert"); if(c) c.addEventListener("click",()=>go({name:"cert"}));
+  const r=$("#retryExam"); if(r) r.addEventListener("click",()=>go({name:"exam"}));
+  $("#toDash").addEventListener("click",()=>go({name:"dash"}));
+}
+
+/* ---------- certificate ---------- */
+function renderCert(){
+  if(!S.examPassed){ go({name:"dash"}); return; }
+  $("#app").innerHTML = `
+    <div class="player">
+      <div class="player-head no-print">
+        <button class="btn btn-ghost btn-sm" id="backBtn">← Dashboard</button>
+        <div><div class="crumbs">CERTIFICATION // COMPLETE</div><h2>Certificate of Completion</h2></div>
+      </div>
+      <div class="panel panel-body no-print" style="margin-bottom:16px">
+        <label class="flabel" for="nm">Name on certificate</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input class="field" id="nm" value="${esc(S.name)}" placeholder="Full name">
+          <button class="btn btn-primary btn-sm" id="saveNm">Save Name</button>
+          <button class="btn btn-ghost btn-sm" id="printBtn">Print / Save PDF</button>
+        </div>
+      </div>
+      <div class="cert">
+        <img class="cert-seal" src="${LOGO}" alt="Xploit Academy logo">
+        <div class="mono">OT Cyber Range by Xploit Academy · Industrial Cybersecurity Awareness</div>
+        <h2>Certificate of Completion</h2>
+        <div class="mono">This certifies that</div>
+        <div class="cert-name">${esc(S.name||"—— Enter your name above ——")}</div>
+        <p class="node-text" style="max-width:60ch;margin:8px auto">has successfully completed all ten scenario-based training units and passed the final examination in Operational Technology cybersecurity awareness, covering removable media, secure remote access, patch &amp; change management, phishing defense, network segmentation, control logic integrity, access control hardening, physical security, and incident response.</p>
+        <p class="mono" style="margin-top:16px">FINAL SCORE ${S.examScore}/${EXAM.questions.length} · ISSUED ${esc(S.examDate)} · XPLOITACADEMY.COM</p>
+      </div>
+    </div>`;
+  $("#backBtn").addEventListener("click",()=>go({name:"dash"}));
+  $("#saveNm").addEventListener("click",()=>{ S.name=$("#nm").value.trim(); save(); renderCert(); toast("Name saved","green"); });
+  $("#printBtn").addEventListener("click",()=>window.print());
+}
+
+/* ---------- boot ---------- */
+$("#brandLogo").src = LOGO;
+$("#brandBtn").addEventListener("click",()=>go({name:"dash"}));
+applyTheme();
+render();
+checkBadges();
+</script>
+</body>
+</html>
